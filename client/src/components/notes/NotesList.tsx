@@ -2,7 +2,7 @@ import { useClerkQuery } from "../../useClerkQuery.ts";
 import { NoteCard } from "./NoteCard.tsx";
 import Grid from "@mui/material/Unstable_Grid2";
 
-export function NotesList({}) {
+export function NotesList() {
   const { status, error, data } = useClerkQuery("api/notes");
   return (
     <div>

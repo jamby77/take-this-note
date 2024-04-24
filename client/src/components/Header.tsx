@@ -67,12 +67,12 @@ export function Header() {
               display: { xs: "none", md: "flex" },
               fontWeight: 700,
               letterSpacing: ".3rem",
-              color: "inherit",
               textDecoration: "none",
               flexGrow: 1,
+              textTransform: "uppercase",
             }}
           >
-            <Link to={"/"} style={{ appearance: "inherit", textDecoration: "none" }}>
+            <Link to={"/"} style={{ color: "#fff", textDecoration: "none" }}>
               Take This Note
             </Link>
           </Typography>

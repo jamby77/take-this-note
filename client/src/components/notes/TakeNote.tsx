@@ -22,7 +22,7 @@ const TakeNoteStatus = {
 };
 type TakeNoteStatusType = (typeof TakeNoteStatus)[keyof typeof TakeNoteStatus];
 
-export const TakeNote = ({}) => {
+export const TakeNote = () => {
   const [status, setStatus] = useState<TakeNoteStatusType>(TakeNoteStatus.Idle);
   const [note, setNote] = useState("");
   const textRef = useRef<HTMLTextAreaElement | null>(null);
