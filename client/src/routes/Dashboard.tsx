@@ -1,19 +1,14 @@
-import { Link } from "react-router-dom";
+import { NotesList } from "../components/notes/NotesList.tsx";
+import { TakeNote } from "../components/notes/TakeNote.tsx";
+import { Box, Container } from "@mui/material";
 
 export function DashboardPage() {
   return (
-    <>
-      <h1>Dashboard page</h1>
-      <p>This is a protected page.</p>
-
-      <ul>
-        <li>
-          <Link to="/dashboard/notes">Notes</Link>
-        </li>
-        <li>
-          <Link to="/">Home</Link>
-        </li>
-      </ul>
-    </>
+    <Container maxWidth="xl">
+      <Box p={6}>
+        <TakeNote />
+        <NotesList />
+      </Box>
+    </Container>
   );
 }

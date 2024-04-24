@@ -6,6 +6,7 @@ import {
 } from "@clerk/clerk-sdk-node";
 import { getUser, register } from "./users/usersController";
 import { getAuthenticatedUser, getUserByEmail } from "./data/users";
+import { createUserNote, getNote, listNotes, updateUserNote } from "./notes/notesController";
 
 export const router = express.Router();
 
@@ -33,33 +34,19 @@ function wrappedAuthMiddleware() {
 }
 const authMiddleware = wrappedAuthMiddleware();
 
-router.get("/users/me", authMiddleware, getUser);
-// router.get("/users/me", ClerkExpressRequireAuth(authOptions), getUser);
-
 // register user
 router.post("/users/register", register);
+router.get("/users/me", authMiddleware, getUser);
 
 // heartbeat
 router.get("/hello", (_: Request, res) => {
   res.send("Hello!");
-  // res.send("Hello from notes server!");
 });
 
-// router.get(
-//   "/notes",
-//   ClerkExpressRequireAuth(authOptions),
-//   async (req: RequireAuthProp<Request>, res) => {
-//     res.json(req.user);
-//   },
-// );
-router.get("/notes", authMiddleware, async (req: WithAuthProp<Request>, res: Response) => {
-  console.log({ reqUserInHandler: req.user });
-
-  return res.json({
-    user: req.user,
-    auth: req.auth,
-  });
-});
+router.get("/notes", authMiddleware, listNotes);
+router.post("/notes", authMiddleware, createUserNote);
+router.put("/notes/:id", authMiddleware, updateUserNote);
+router.get("/notes/:id", authMiddleware, getNote);
 
 export const getPagination = (req: Request) => {
   const page = parseInt(req.query.page as string) || 1;

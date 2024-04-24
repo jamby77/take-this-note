@@ -31,9 +31,8 @@ export async function getUser(req: WithAuthProp<express.Request>, res: express.R
       newUser.name = name;
     }
     existingUser = await createUser(newUser);
-  } else {
-    console.log(existingUser);
   }
+
   return res.json(existingUser);
 }
 
