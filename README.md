@@ -1,5 +1,5 @@
 # Take This Note
-This app relies on [Drizzle](https://github.com/drizzle-orm/drizzle) for the database and 
+This app relies on [Drizzle ORM](https://github.com/drizzle-orm/drizzle) for the database and 
 [Clerk](https://clerk.com) for authentication.
 ## Prerequisites
 
@@ -7,8 +7,12 @@ This app relies on [Drizzle](https://github.com/drizzle-orm/drizzle) for the dat
 2. In order for the database to work, you need to set up a PostgreSQL database. 
 This project is developed using local database, running in Docker. See `docker-compose.yml`.
 To ensure proper db flow, you need to follow these steps:
+
+- ```CREATE DATABASE notes```
 - ```ALTER ROLE postgres SET client_encoding TO 'utf8'```
 - ```ALTER ROLE postgres SET default_transaction_isolation TO 'read committed'```
+- ```ALTER ROLE postgres SET timezone TO 'UTC'```
+- ```GRANT ALL PRIVILEGES ON DATABASE notes TO postgres```
 
 ## Installation
 
