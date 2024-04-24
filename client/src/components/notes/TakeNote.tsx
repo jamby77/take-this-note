@@ -8,8 +8,10 @@ import {
   CardHeader,
   IconButton,
   TextField,
+  Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import { useClerkMutation } from "../../useClerkQuery.ts";
 
 const TakeNoteStatus = {
   Idle: "idle",
@@ -24,6 +26,18 @@ export const TakeNote = ({}) => {
   const [status, setStatus] = useState<TakeNoteStatusType>(TakeNoteStatus.Idle);
   const [note, setNote] = useState("");
   const textRef = useRef<HTMLTextAreaElement | null>(null);
+  // Mutations
+  const mu = useClerkMutation(
+    "api/notes",
+    "POST",
+    () => {
+      setStatus(TakeNoteStatus.Success);
+      setNote("");
+    },
+    () => {
+      setStatus(TakeNoteStatus.Error);
+    },
+  );
 
   const takeNoteHandler = () => {
     setStatus(TakeNoteStatus.Writing);
@@ -37,13 +51,28 @@ export const TakeNote = ({}) => {
   };
 
   function saveClickHandler() {
+    if (!note || !note.trim().length) {
+      return;
+    }
     setStatus(TakeNoteStatus.Saving);
+    // take first line of the note as title
+    let [title, content] = note.split("\n", 2);
+    // if no content, use title as content
+    if (!content) {
+      content = title;
+    }
+    mu.mutate({ title, content });
   }
 
   const closeNoteHandler = () => setStatus(TakeNoteStatus.Idle);
   return (
     <Box>
-      {status === TakeNoteStatus.Idle && (
+      {status === TakeNoteStatus.Success && (
+        <Typography variant="h6" color="success.main" p={2} align="center">
+          Note saved
+        </Typography>
+      )}
+      {(status === TakeNoteStatus.Idle || status === TakeNoteStatus.Success) && (
         <Card
           variant="outlined"
           sx={{ minWidth: 375, maxWidth: 600, cursor: "pointer", margin: "0 auto" }}
@@ -52,9 +81,8 @@ export const TakeNote = ({}) => {
           <Button onClick={takeNoteHandler}>Take Your Note</Button>
         </Card>
       )}
-      {status === TakeNoteStatus.Writing && (
+      {(status === TakeNoteStatus.Writing || status === TakeNoteStatus.Saving) && (
         <Card
-          variant="outlined"
           sx={{
             minWidth: 375,
             maxWidth: 600,
@@ -90,16 +118,26 @@ export const TakeNote = ({}) => {
               variant="contained"
               disableElevation
               color="success"
+              disabled={status === TakeNoteStatus.Saving}
             >
               Save
             </Button>
-            <Button size="small" onClick={closeNoteHandler} color="warning">
+            <Button
+              size="small"
+              onClick={closeNoteHandler}
+              color="warning"
+              disabled={status === TakeNoteStatus.Saving}
+            >
               Discard Changes
             </Button>
           </CardActions>
         </Card>
       )}
-      {note}
+      {mu.isError ? (
+        <Typography p={2} variant="subtitle1" color="error" align="center">
+          An error occurred: {mu.error.message}
+        </Typography>
+      ) : null}
     </Box>
   );
 };
