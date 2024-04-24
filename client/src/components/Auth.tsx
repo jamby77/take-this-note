@@ -13,7 +13,7 @@ export function Auth() {
     const fetchData = async () => {
       try {
         const token = await getToken();
-        const input = `${API_URL}/notes`;
+        const input = `${API_URL}/api/users/me`;
         console.log(input);
         const response = await fetch(input, {
           method: "GET",

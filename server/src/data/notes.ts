@@ -15,38 +15,15 @@ export const getUserNotes = async (
     limit: limit,
     offset: (page - 1) * limit,
   };
-  if (tag && typeof tag === "string" && tag.trim().length > 0) {
+  if (tag && tag.trim().length > 0) {
     query.with = {
       tags: {
         where: (t: typeof tags, { eq }: { eq: BinaryOperator }) => eq(t.name, tag),
       },
     };
   }
-  if (searchText && typeof searchText === "string" && searchText.trim().length > 0) {
+  if (searchText && searchText.trim().length > 0) {
     query.where = and(query.where, ilike(notes.title, `%${searchText}%`));
-  }
-  return db.query.notes.findMany(query);
-};
-
-export const getNotesByTag = async (
-  page = 1,
-  limit = 10,
-  tag: string,
-  searchText?: string,
-): Promise<Note[]> => {
-  const query: any = {
-    limit: limit,
-    offset: (page - 1) * limit,
-    with: {
-      tags: {
-        where: (t: typeof tags, { eq }: { eq: BinaryOperator }) => eq(t.name, tag),
-      },
-    },
-    orderBy: [desc(notes.createdAt)],
-  };
-  if (searchText) {
-    query.where = (n: typeof notes, { ilike }: { ilike: BinaryOperator }) =>
-      ilike(n.title, `%${searchText}%`);
   }
   return db.query.notes.findMany(query);
 };
