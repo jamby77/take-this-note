@@ -9,8 +9,14 @@ interface OptionType {
 
 const filter = createFilterOptions<OptionType>();
 
-export const NoteTagsEdit = () => {
-  const [tags, setTags] = useState<OptionType[]>([]);
+export const NoteTagsEdit = ({
+  initialTags,
+  onTagsChange,
+}: {
+  initialTags?: OptionType[];
+  onTagsChange?: (tags: OptionType[]) => void;
+}) => {
+  const [tags, setTags] = useState<OptionType[]>(initialTags || []);
 
   const [value, setValue] = useState<OptionType[]>([]);
 
@@ -21,6 +27,12 @@ export const NoteTagsEdit = () => {
       setTags(data);
     }
   }, [status, data]);
+  useEffect(() => {
+    if (initialTags) {
+      setValue(initialTags);
+    }
+  }, [initialTags]);
+
   return (
     <div>
       <Autocomplete
@@ -59,6 +71,9 @@ export const NoteTagsEdit = () => {
               return { name: item.inputValue ? item.inputValue : item.name };
             }),
           );
+          if (onTagsChange) {
+            onTagsChange(newValue);
+          }
         }}
       />
     </div>

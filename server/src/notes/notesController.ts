@@ -10,14 +10,12 @@ const listNotes = async (req: WithAuthProp<Request>, res: Response) => {
   }
   const { page, limit } = getPagination(req);
   const {
-    tag,
     q,
   }: {
-    tag?: string;
     q?: string;
   } = req.query;
 
-  const notes = await getUserNotes(user.id, page, limit, tag, q);
+  const notes = await getUserNotes(user.id, page, limit, q);
   return res.json(notes);
 };
 
@@ -63,21 +61,21 @@ const createUserNote = async (req: WithAuthProp<Request>, res: Response) => {
 const updateUserNote = async (req: WithAuthProp<Request>, res: Response) => {
   const user = req.user;
   if (!user) {
-    return res.sendStatus(401);
+    return res.sendStatus(StatusCodes.UNAUTHORIZED);
   }
   const { title, content } = req.body;
   const { id } = req.params;
   if (!id || !title || !content) {
-    res.status(400);
+    res.status(StatusCodes.BAD_REQUEST);
     return res.send("Id, title and content are required");
   }
   const exisingNote = await getNoteById(+id);
   if (!exisingNote) {
-    res.status(404);
+    res.status(StatusCodes.NOT_FOUND);
     return res.send("Note not found");
   }
   if (exisingNote.userId !== user.id) {
-    res.status(403);
+    res.status(StatusCodes.FORBIDDEN);
     return res.send("You do not have permission to update this note");
   }
 

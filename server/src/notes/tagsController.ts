@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createTag, deleteTag, getTagByName, getTags, updateTag } from "../data/notes";
+import { createTag, deleteTag, getTagByName, getTagNotes, getTags, updateTag } from "../data/notes";
 import { WithAuthProp } from "@clerk/clerk-sdk-node";
 import { getPagination, StatusCodes } from "../router";
 
@@ -10,10 +10,23 @@ const listTags = async (req: WithAuthProp<Request>, res: Response) => {
   }
   const { page, limit } = getPagination(req);
 
-  const notes = await getTags(page, limit);
+  const tags = await getTags(page, limit);
+  return res.json(tags);
+};
+const getNotesForTag = async (req: WithAuthProp<Request>, res: Response) => {
+  const user = req.user;
+  if (!user) {
+    return res.sendStatus(StatusCodes.UNAUTHORIZED);
+  }
+  const { tag } = req.params;
+  if (!tag) {
+    res.sendStatus(StatusCodes.BAD_REQUEST);
+    return res.send("Tag is required");
+  }
+  const { page, limit } = getPagination(req);
+  const notes = await getTagNotes(tag, user.id, page, limit);
   return res.json(notes);
 };
-
 // create CRUD handlers
 const create = async (req: WithAuthProp<Request>, res: Response) => {
   const user = req.user;
@@ -75,4 +88,5 @@ export const tagsController = {
   create,
   updateTagName,
   deleteATag,
+  getNotesForTag,
 };

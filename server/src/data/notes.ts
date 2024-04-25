@@ -1,31 +1,65 @@
 import { db } from "./db";
-import { and, BinaryOperator, desc, eq, ilike } from "drizzle-orm";
-import { Note, NoteInsert, notes, tags } from "./schema";
+import { and, desc, eq, ilike, sql } from "drizzle-orm";
+import { Note, NoteInsert, notes, Tag, tags } from "./schema";
 
 export const getUserNotes = async (
   userId: number,
   page = 1,
   limit = 10,
-  tag?: string,
   searchText?: string,
 ): Promise<Note[]> => {
+  const whereClause = [eq(notes.userId, userId)];
   const query: any = {
-    where: eq(notes.userId, userId),
     orderBy: [desc(notes.createdAt)],
     limit: limit,
     offset: (page - 1) * limit,
-  };
-  if (tag && tag.trim().length > 0) {
-    query.with = {
-      tags: {
-        where: (t: typeof tags, { eq }: { eq: BinaryOperator }) => eq(t.name, tag),
+    with: {
+      notesToTags: {
+        columns: {},
+        with: {
+          tag: { columns: { name: true } },
+        },
       },
-    };
-  }
+    },
+  };
   if (searchText && searchText.trim().length > 0) {
-    query.where = and(query.where, ilike(notes.title, `%${searchText}%`));
+    whereClause.push(ilike(notes.title, `%${searchText}%`));
   }
-  return db.query.notes.findMany(query);
+  // merge where clauses
+  query.where = and(...whereClause);
+  const data = await db.query.notes.findMany(query);
+  return data.map((note) => {
+    // @ts-ignore
+    const { notesToTags, ...rest } = note;
+    const tags = notesToTags.map((ntt: { tag: Tag }) => ntt.tag.name).filter(Boolean);
+    return {
+      ...rest,
+      tags,
+    };
+  });
+};
+
+export const getTagNotes = async (tagName: string, userId: number, page: number, limit: number) => {
+  const data = await db.query.tags.findFirst({
+    columns: { name: true },
+    where: eq(tags.name, tagName),
+    limit: limit,
+    offset: (page - 1) * limit,
+    with: {
+      notesToTags: {
+        columns: {},
+        with: {
+          note: {
+            columns: { id: true, content: true, title: true },
+            // @ts-ignore
+            where: (n) => eq(n.userId, userId),
+          },
+        },
+      },
+    },
+  });
+  // @ts-ignore
+  return (data?.notesToTags.map((ntt) => ntt.note) || []).filter(Boolean);
 };
 
 export const getNoteById = async (id: number) => {
@@ -43,7 +77,10 @@ export const createNote = async (newNote: NoteInsert) => {
 export const updateNote = async (id: number, note: NoteInsert) => {
   const returning = await db
     .update(notes)
-    .set(note)
+    .set({
+      ...note,
+      updatedAt: sql`now()`,
+    })
     .where(eq(notes.id, id))
     .returning({ id: notes.id, title: notes.title, content: notes.content });
   return returning.pop();
