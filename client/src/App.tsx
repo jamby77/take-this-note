@@ -10,6 +10,8 @@ const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 import CssBaseline from "@mui/material/CssBaseline";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { createTheme, ThemeProvider, useMediaQuery } from "@mui/material";
+import { useMemo } from "react";
 
 const queryClient = new QueryClient();
 if (!PUBLISHABLE_KEY) {
@@ -17,16 +19,29 @@ if (!PUBLISHABLE_KEY) {
 }
 
 function App() {
-  // const navigate = useNavigate();
+  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
+
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: prefersDarkMode ? "dark" : "light",
+        },
+      }),
+    [prefersDarkMode],
+  );
+
   return (
     <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
       <QueryClientProvider client={queryClient}>
-        <CssBaseline enableColorScheme />
-        <Header />
-        <main>
-          <Outlet />
-        </main>
-        <ReactQueryDevtools initialIsOpen={false} />
+        <ThemeProvider theme={theme}>
+          <CssBaseline enableColorScheme />
+          <Header />
+          <main>
+            <Outlet />
+          </main>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </ThemeProvider>
       </QueryClientProvider>
     </ClerkProvider>
   );
