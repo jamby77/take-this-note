@@ -4,6 +4,8 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "nodemon -w src -x tsx src/main.ts",
+    "all": "npm-run-all --parallel dev client",
+    "client": "cd ../client && vite",
     "start": "NODE_ENV=production tsx src/main.ts",
     "build": "vite build",
     "drizzle:studio": "drizzle-kit studio --port 3456 --verbose",
@@ -20,6 +22,7 @@
     "@types/node": "^20.9.3",
     "drizzle-kit": "^0.20.17",
     "nodemon": "^3.0.1",
+    "npm-run-all": "^4.1.5",
     "pg": "^8.11.5",
     "prettier": "^3.2.5",
     "vite": "^5.0.2"

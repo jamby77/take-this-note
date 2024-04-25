@@ -6,7 +6,7 @@ import { User, UserInsert, UserWithNotes } from "../data/schema";
 /**
  * Get currently authenticated user
  */
-export async function getUser(req: WithAuthProp<express.Request>, res: express.Response) {
+async function getUser(req: WithAuthProp<express.Request>, res: express.Response) {
   if (!req.auth?.userId) {
     res.json({ error: "Unauthenticated: missing userId" });
     return res.sendStatus(401);
@@ -36,7 +36,7 @@ export async function getUser(req: WithAuthProp<express.Request>, res: express.R
   return res.json(existingUser);
 }
 
-export const register = async (req: Request, res: Response) => {
+const register = async (req: Request, res: Response) => {
   try {
     const { name, email } = req.body;
     if (!name || !email) {
@@ -67,3 +67,5 @@ export const register = async (req: Request, res: Response) => {
     return res;
   }
 };
+
+export const usersController = { getUser, register };

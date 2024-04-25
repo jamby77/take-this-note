@@ -3,7 +3,7 @@ import { createTag, deleteTag, getTagByName, getTags, updateTag } from "../data/
 import { WithAuthProp } from "@clerk/clerk-sdk-node";
 import { getPagination, StatusCodes } from "../router";
 
-export const listTags = async (req: WithAuthProp<Request>, res: Response) => {
+const listTags = async (req: WithAuthProp<Request>, res: Response) => {
   const user = req.user;
   if (!user) {
     return res.sendStatus(StatusCodes.UNAUTHORIZED);
@@ -15,7 +15,7 @@ export const listTags = async (req: WithAuthProp<Request>, res: Response) => {
 };
 
 // create CRUD handlers
-export const create = async (req: WithAuthProp<Request>, res: Response) => {
+const create = async (req: WithAuthProp<Request>, res: Response) => {
   const user = req.user;
   if (!user) {
     return res.sendStatus(StatusCodes.UNAUTHORIZED);
@@ -30,7 +30,7 @@ export const create = async (req: WithAuthProp<Request>, res: Response) => {
   return res.json(tag);
 };
 
-export const updateTagName = async (req: WithAuthProp<Request>, res: Response) => {
+const updateTagName = async (req: WithAuthProp<Request>, res: Response) => {
   const user = req.user;
   if (!user) {
     return res.sendStatus(StatusCodes.UNAUTHORIZED);
@@ -51,7 +51,7 @@ export const updateTagName = async (req: WithAuthProp<Request>, res: Response) =
   return res.json(newTag);
 };
 
-export const deleteATag = async (req: WithAuthProp<Request>, res: Response) => {
+const deleteATag = async (req: WithAuthProp<Request>, res: Response) => {
   const user = req.user;
   if (!user) {
     return res.sendStatus(StatusCodes.UNAUTHORIZED);
@@ -68,4 +68,11 @@ export const deleteATag = async (req: WithAuthProp<Request>, res: Response) => {
   }
   await deleteTag(tag);
   return res.sendStatus(StatusCodes.NO_CONTENT);
+};
+
+export const tagsController = {
+  listTags,
+  create,
+  updateTagName,
+  deleteATag,
 };

@@ -3,7 +3,7 @@ import { createNote, deleteNote, getNoteById, getUserNotes, updateNote } from ".
 import { WithAuthProp } from "@clerk/clerk-sdk-node";
 import { getPagination, StatusCodes } from "../router";
 
-export const listNotes = async (req: WithAuthProp<Request>, res: Response) => {
+const listNotes = async (req: WithAuthProp<Request>, res: Response) => {
   const user = req.user;
   if (!user) {
     return res.sendStatus(StatusCodes.UNAUTHORIZED);
@@ -21,7 +21,7 @@ export const listNotes = async (req: WithAuthProp<Request>, res: Response) => {
   return res.json(notes);
 };
 
-export const getNote = async (req: WithAuthProp<Request>, res: Response) => {
+const getNote = async (req: WithAuthProp<Request>, res: Response) => {
   const user = req.user;
   if (!user) {
     return res.sendStatus(StatusCodes.UNAUTHORIZED);
@@ -44,7 +44,7 @@ export const getNote = async (req: WithAuthProp<Request>, res: Response) => {
 };
 
 // create CRUD handlers
-export const createUserNote = async (req: WithAuthProp<Request>, res: Response) => {
+const createUserNote = async (req: WithAuthProp<Request>, res: Response) => {
   const user = req.user;
   if (!user) {
     return res.sendStatus(401);
@@ -60,7 +60,7 @@ export const createUserNote = async (req: WithAuthProp<Request>, res: Response) 
   return res.json(note);
 };
 
-export const updateUserNote = async (req: WithAuthProp<Request>, res: Response) => {
+const updateUserNote = async (req: WithAuthProp<Request>, res: Response) => {
   const user = req.user;
   if (!user) {
     return res.sendStatus(401);
@@ -85,7 +85,7 @@ export const updateUserNote = async (req: WithAuthProp<Request>, res: Response) 
   return res.json(note);
 };
 
-export const deleteUserNote = async (req: WithAuthProp<Request>, res: Response) => {
+const deleteUserNote = async (req: WithAuthProp<Request>, res: Response) => {
   const user = req.user;
   if (!user) {
     return res.sendStatus(401);
@@ -106,4 +106,12 @@ export const deleteUserNote = async (req: WithAuthProp<Request>, res: Response) 
   }
   await deleteNote(parseInt(id, 10));
   return res.sendStatus(200);
+};
+
+export const notesController = {
+  listNotes,
+  getNote,
+  createUserNote,
+  updateUserNote,
+  deleteUserNote,
 };

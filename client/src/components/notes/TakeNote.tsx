@@ -7,11 +7,13 @@ import {
   CardContent,
   CardHeader,
   IconButton,
+  Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useClerkMutation } from "../../useClerkQuery.ts";
+import { NoteTagsEdit } from "./NoteTagsEdit.tsx";
 
 const TakeNoteStatus = {
   Idle: "idle",
@@ -56,6 +58,7 @@ export const TakeNote = () => {
     }
     setStatus(TakeNoteStatus.Saving);
     // take first line of the note as title
+    // eslint-disable-next-line prefer-const
     let [title, content] = note.split("\n", 2);
     // if no content, use title as content
     if (!content) {
@@ -101,15 +104,18 @@ export const TakeNote = () => {
             title="Take Your Note"
           />
           <CardContent sx={{ flexGrow: 1 }}>
-            <TextField
-              fullWidth
-              onChange={changeNoteHandler}
-              value={note}
-              multiline
-              placeholder="Take Note"
-              inputRef={textRef}
-              sx={{ flexGrow: 1 }}
-            />
+            <Stack spacing={3} sx={{}}>
+              <TextField
+                fullWidth
+                onChange={changeNoteHandler}
+                value={note}
+                multiline
+                placeholder="Take Note"
+                inputRef={textRef}
+                sx={{ flexGrow: 1 }}
+              />
+              <NoteTagsEdit />
+            </Stack>
           </CardContent>
           <CardActions sx={{ justifyContent: "center" }}>
             <Button

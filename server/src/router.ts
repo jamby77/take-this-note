@@ -4,9 +4,10 @@ import {
   ClerkMiddlewareOptions,
   WithAuthProp,
 } from "@clerk/clerk-sdk-node";
-import { getUser, register } from "./users/usersController";
 import { getAuthenticatedUser, getUserByEmail } from "./data/users";
-import { createUserNote, getNote, listNotes, updateUserNote } from "./notes/notesController";
+import { usersController } from "./users/usersController";
+import { notesController } from "./notes/notesController";
+import { tagsController } from "./notes/tagsController";
 
 export const router = express.Router();
 
@@ -34,19 +35,27 @@ function wrappedAuthMiddleware() {
 }
 const authMiddleware = wrappedAuthMiddleware();
 
-// register user
-router.post("/users/register", register);
-router.get("/users/me", authMiddleware, getUser);
-
 // heartbeat
 router.get("/hello", (_: Request, res) => {
   res.send("Hello!");
 });
 
-router.get("/notes", authMiddleware, listNotes);
-router.post("/notes", authMiddleware, createUserNote);
-router.put("/notes/:id", authMiddleware, updateUserNote);
-router.get("/notes/:id", authMiddleware, getNote);
+// user
+router.post("/users/register", usersController.register);
+router.get("/users/me", authMiddleware, usersController.getUser);
+
+// notes
+router.get("/notes", authMiddleware, notesController.listNotes);
+router.post("/notes", authMiddleware, notesController.createUserNote);
+router.put("/notes/:id", authMiddleware, notesController.updateUserNote);
+router.get("/notes/:id", authMiddleware, notesController.getNote);
+router.delete("/notes/:id", authMiddleware, notesController.deleteUserNote);
+
+// tags
+router.get("/tags", authMiddleware, tagsController.listTags);
+router.post("/tags", authMiddleware, tagsController.create);
+router.put("/tags/:tag", authMiddleware, tagsController.updateTagName);
+router.delete("/tags/:tag", authMiddleware, tagsController.deleteATag);
 
 export const getPagination = (req: Request) => {
   const page = parseInt(req.query.page as string) || 1;
