@@ -3,11 +3,11 @@ import { useAuth } from "@clerk/clerk-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export function useClerkQuery(url: string) {
-  const { getToken } = useAuth();
+export function useClerkQuery<Result>(url: string) {
+  const { getToken, userId } = useAuth();
 
-  return useQuery({
-    queryKey: [url],
+  return useQuery<Result>({
+    queryKey: [url, userId],
     queryFn: async () => {
       const authToken = await getToken();
       const resourceUrl = `${API_URL}/${url}`;
@@ -24,17 +24,23 @@ export function useClerkQuery(url: string) {
 }
 
 export function useClerkMutation(
-  url: string,
-  method: "POST" | "PUT" | "DELETE" = "POST",
-  onSuccess?: () => void,
-  onError?: () => void,
+  onSuccess?: (data?: unknown, variables?: unknown) => void,
+  onError?: (error: Error, variables: unknown) => void,
+  refreshKeys?: string[],
 ) {
-  const { getToken } = useAuth();
+  const { getToken, userId } = useAuth();
   // Access the client
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: any) => {
+    mutationKey: [...(refreshKeys || []), userId],
+    mutationFn: async (req: {
+      url: string;
+      method: "POST" | "PUT" | "DELETE";
+      // eslint-disable-next-line
+      data?: Record<string, any>;
+    }) => {
+      const { url, method = "POST", data } = req;
       const authToken = await getToken();
       const resourceUrl = `${API_URL}/${url}`;
       const res = await fetch(resourceUrl, {
@@ -50,13 +56,15 @@ export function useClerkMutation(
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       // Invalidate and re-fetch
-      queryClient.invalidateQueries({ queryKey: [url] });
-      onSuccess && onSuccess();
+      queryClient.invalidateQueries({
+        queryKey: [...(refreshKeys || []), userId],
+      });
+      onSuccess && onSuccess(data, variables);
     },
-    onError: () => {
-      onError && onError();
+    onError: (error, variables) => {
+      onError && onError(error, variables);
     },
   });
 }

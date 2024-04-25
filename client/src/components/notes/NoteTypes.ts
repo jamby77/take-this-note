@@ -4,5 +4,6 @@ export interface Note {
   content: string;
   createdAt?: Date | string;
   updatedAt?: Date | string;
-  tags: string[];
+  tags?: string[];
 }
+export type editorState = "open" | "closed";

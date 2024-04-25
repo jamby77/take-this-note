@@ -24,7 +24,7 @@ export const NoteTagsEdit = ({
 
   useEffect(() => {
     if (status === "success" && data) {
-      setTags(data);
+      setTags(data as OptionType[]);
     }
   }, [status, data]);
   useEffect(() => {

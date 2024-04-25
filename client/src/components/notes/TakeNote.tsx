@@ -12,8 +12,8 @@ import {
   Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { useClerkMutation } from "../../useClerkQuery.ts";
 import { NoteTagsEdit } from "./NoteTagsEdit.tsx";
+import { useNotes } from "../../providers/NotesProvider.tsx";
 
 const TakeNoteStatus = {
   Idle: "idle",
@@ -28,18 +28,7 @@ export const TakeNote = () => {
   const [status, setStatus] = useState<TakeNoteStatusType>(TakeNoteStatus.Idle);
   const [note, setNote] = useState("");
   const textRef = useRef<HTMLTextAreaElement | null>(null);
-  // Mutations
-  const mu = useClerkMutation(
-    "api/notes",
-    "POST",
-    () => {
-      setStatus(TakeNoteStatus.Success);
-      setNote("");
-    },
-    () => {
-      setStatus(TakeNoteStatus.Error);
-    },
-  );
+  const { onCreate } = useNotes();
 
   const takeNoteHandler = () => {
     setStatus(TakeNoteStatus.Writing);
@@ -64,7 +53,16 @@ export const TakeNote = () => {
     if (!content) {
       content = title;
     }
-    mu.mutate({ title, content });
+    onCreate(
+      { title, content },
+      () => {
+        setStatus(TakeNoteStatus.Success);
+        setNote("");
+      },
+      () => {
+        setStatus(TakeNoteStatus.Error);
+      },
+    );
   }
 
   const closeNoteHandler = () => setStatus(TakeNoteStatus.Idle);
@@ -139,11 +137,6 @@ export const TakeNote = () => {
           </CardActions>
         </Card>
       )}
-      {mu.isError ? (
-        <Typography p={2} variant="subtitle1" color="error" align="center">
-          An error occurred: {mu.error.message}
-        </Typography>
-      ) : null}
     </Box>
   );
 };

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { Outlet, useNavigate } from "react-router-dom";
+import { LoadingIndicator } from "./components/LoadingIndicator.tsx";
 
 export function DashboardLayout() {
   const { userId, isLoaded } = useAuth();
@@ -12,7 +13,9 @@ export function DashboardLayout() {
     }
   }, [isLoaded, userId, navigate]);
 
-  if (!isLoaded) return "Loading...";
+  if (!isLoaded) {
+    return <LoadingIndicator />;
+  }
 
   return <Outlet />;
 }

@@ -12,30 +12,20 @@ import EditNoteIcon from "@mui/icons-material/EditNoteTwoTone";
 
 import { Note } from "./NoteTypes.ts";
 import { NodeCardTags } from "./NodeCardTags.tsx";
+import { NoteTimestamps } from "./NoteTimestamps.tsx";
+import { useNotes } from "../../providers/NotesProvider.tsx";
 
 export const NoteCard = ({ note }: { note: Note }) => {
-  let createdString: string = "";
-  let editedString: string = "";
-  if (note.createdAt) {
-    createdString = new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      timeZone: "Europe/Sofia",
-    }).format(new Date(note.createdAt));
-  }
-  if (note.updatedAt) {
-    editedString = new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      timeZone: "Europe/Sofia",
-    }).format(new Date(note.updatedAt));
-  }
+  const { onStartEdit } = useNotes();
+
   return (
     <Card
       variant="outlined"
       sx={{
         height: 300,
+        "&:hover": { boxShadow: 3, cursor: "pointer", borderWidth: 2 },
       }}
+      onClick={() => onStartEdit(note)}
     >
       <Stack direction="column" spacing={0.5} sx={{ height: "100%" }}>
         <CardHeader title={note.title} subheader={<NodeCardTags note={note} />} />
@@ -54,50 +44,7 @@ export const NoteCard = ({ note }: { note: Note }) => {
         </CardContent>
         <CardActions sx={{ height: 48, flexShrink: 0 }}>
           <Stack sx={{ flexGrow: 1 }} direction="row" className="card-actions">
-            <Stack
-              className="note-dates"
-              direction="column"
-              justifyContent="flex-start"
-              alignItems="flex-start"
-              sx={{
-                flexGrow: 0,
-              }}
-            >
-              {createdString.length > 0 && (
-                <Typography
-                  align="center"
-                  variant="body2"
-                  color="text.disabled"
-                  fontSize="xx-small"
-                  fontWeight="bold"
-                  sx={{
-                    transition: "font-size 0.3s ease-in-out",
-                    "&:hover": {
-                      fontSize: "x-small",
-                    },
-                  }}
-                >
-                  Created: {createdString}
-                </Typography>
-              )}
-              {editedString.length > 0 && (
-                <Typography
-                  align="center"
-                  variant="body2"
-                  color="text.disabled"
-                  fontSize="xx-small"
-                  fontWeight="bold"
-                  sx={{
-                    transition: "font-size 0.3s ease-in-out",
-                    "&:hover": {
-                      fontSize: "x-small",
-                    },
-                  }}
-                >
-                  Edited: {editedString}
-                </Typography>
-              )}
-            </Stack>
+            <NoteTimestamps note={note} />
             <Stack
               sx={{ flexGrow: 1 }}
               className="note-actions"
@@ -105,7 +52,7 @@ export const NoteCard = ({ note }: { note: Note }) => {
               spacing={1}
               justifyContent="flex-end"
             >
-              <IconButton size="small">
+              <IconButton size="small" onClick={() => onStartEdit(note)}>
                 <EditNoteIcon color="action" aria-label="Edit Note" titleAccess="Edit Note" />
               </IconButton>
               <IconButton size="small">
