@@ -56,7 +56,7 @@ router.post("/notes", authMiddleware, notesController.createUserNote);
 router.put("/notes/:id", authMiddleware, notesController.updateUserNote);
 router.get("/notes/:id", authMiddleware, notesController.getNote);
 router.delete("/notes/:id", authMiddleware, notesController.deleteUserNote);
-``;
+
 // tags
 router.get("/tags", authMiddleware, tagsController.listTags);
 router.get("/tags/:tag", authMiddleware, tagsController.getNotesForTag);

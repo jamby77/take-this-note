@@ -15,9 +15,11 @@ import { NoteCardTags } from "./NoteCardTags.tsx";
 import { NoteTimestamps } from "./NoteTimestamps.tsx";
 
 import { useNotes } from "../../providers/UseNotes.tsx";
+import { useRef } from "react";
 
 export const NoteCard = ({ note }: { note: Note }) => {
-  const { onStartEditNote } = useNotes();
+  const { onStartEditNote, onStartDeleteNote } = useNotes();
+  const delBtnRef = useRef(null);
 
   return (
     <Card
@@ -26,7 +28,14 @@ export const NoteCard = ({ note }: { note: Note }) => {
         height: 300,
         "&:hover": { boxShadow: 3, cursor: "pointer", borderWidth: 2 },
       }}
-      onClick={() => onStartEditNote(note)}
+      onClick={(e) => {
+        console.log(e);
+        const target = e.target as HTMLElement;
+        if (target === delBtnRef.current) {
+          return;
+        }
+        onStartEditNote(note);
+      }}
     >
       <Stack direction="column" spacing={0.5} sx={{ height: "100%" }}>
         <CardHeader title={note.title} subheader={<NoteCardTags note={note} />} />
@@ -56,7 +65,15 @@ export const NoteCard = ({ note }: { note: Note }) => {
               <IconButton size="small" onClick={() => onStartEditNote(note)}>
                 <EditNoteIcon color="action" aria-label="Edit Note" titleAccess="Edit Note" />
               </IconButton>
-              <IconButton size="small">
+              <IconButton
+                ref={delBtnRef}
+                size="small"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  event.preventDefault();
+                  onStartDeleteNote(note);
+                }}
+              >
                 <DeleteIcon color="error" aria-label="Delete Note" titleAccess="Delete Note" />
               </IconButton>
             </Stack>

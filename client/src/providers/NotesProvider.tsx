@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { createContext, Dispatch, ReactNode, useReducer } from "react";
+import { createContext, Dispatch, ReactNode, useEffect, useReducer } from "react";
 import { useClerkMutation } from "../useClerkQuery.ts";
 import { Note } from "../components/notes/NoteTypes.ts";
 import { NoteValidation, parseNote, TagValidation } from "../shared/validations.ts";
@@ -32,6 +32,11 @@ interface NotesContextType {
    * currently selected note
    */
   currentNote?: Note;
+  /**
+   * note to delete
+   */
+  deleteNote?: Note;
+  deleteNoteConfirm?: boolean;
   /**
    * currently selected tag
    */
@@ -67,6 +72,12 @@ interface NotesContextType {
    */
   onStartEditNote: (note: Note) => void;
   /**
+   * initialize deleting of note
+   * 1. Ask for confirmation
+   * 2. Perform delete
+   */
+  onStartDeleteNote: (note: Note) => void;
+  /**
    * Stop editing note
    */
   onStopEditNote: () => void;
@@ -96,7 +107,9 @@ const defaultContextValue: NotesContextType = {
   currentTag: undefined,
   currentTags: [],
   currentSearch: undefined,
-
+  onStartDeleteNote: (_: Note) => {
+    throw new Error("Function not implemented.");
+  },
   onDeleteNote: (_: number) => {
     throw new Error("Function not implemented.");
   },
@@ -143,6 +156,10 @@ export enum ReducerActionsEnum {
   SET_STATUS,
   DELETE_TAG,
   SET_NOTIFICATION,
+  DELETE_NOTE_START,
+  CLEAR_DELETE_NOTE,
+  DELETE_NOTE,
+  DELETE_NOTE_FINISH,
 }
 
 type NotesReducerStateType = Omit<
@@ -156,6 +173,7 @@ type NotesReducerStateType = Omit<
   | "onNotesSearch"
   | "onTagsChange"
   | "onClearNotification"
+  | "onStartDeleteNote"
 >;
 // type NotesReducerActionValueType = unknown | null;
 type NotesReducerActionType = {
@@ -167,6 +185,8 @@ const initialState: NotesReducerStateType = {
   status: "pending",
   error: undefined,
   notification: undefined,
+  deleteNote: undefined,
+  deleteNoteConfirm: false,
   notes: [],
   isEditing: false,
   currentNote: undefined,
@@ -189,6 +209,27 @@ const getErrorMessage = (error: any): string => {
 
 function notesReducer(state: NotesReducerStateType, action: NotesReducerActionType) {
   switch (action.type) {
+    case ReducerActionsEnum.DELETE_NOTE_FINISH:
+      return {
+        ...state,
+        deleteNoteConfirm: false,
+        deleteNote: undefined,
+      };
+    case ReducerActionsEnum.DELETE_NOTE:
+      return {
+        ...state,
+        deleteNoteConfirm: true,
+      };
+    case ReducerActionsEnum.CLEAR_DELETE_NOTE:
+      return {
+        ...state,
+        deleteNote: undefined,
+      };
+    case ReducerActionsEnum.DELETE_NOTE_START:
+      return {
+        ...state,
+        deleteNote: action.value,
+      };
     case ReducerActionsEnum.SET_NOTIFICATION:
       if (!action.value) {
         return {
@@ -334,20 +375,57 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
         method: "POST",
         data: validationResult.data,
       },
-      { onError, onSuccess },
+      {
+        onError: (error) => {
+          dispatch({
+            type: ReducerActionsEnum.MUTATION_ERROR,
+            value: error,
+          });
+          onError && onError();
+        },
+        onSuccess: () => {
+          dispatch({
+            type: ReducerActionsEnum.SET_NOTIFICATION,
+            value: { message: "Note created", severity: "success" },
+          });
+          onSuccess && onSuccess();
+        },
+      },
     );
   };
 
   const handleNoteDelete = (noteId: number, onSuccess?: () => void, onError?: () => void) => {
-    // TODO - 27.04.24 - show confirmation
     mu.mutate(
       {
         url: `api/notes/${noteId}`,
         method: "DELETE",
       },
-      { onError, onSuccess },
+      {
+        onError: (error) => {
+          dispatch({
+            type: ReducerActionsEnum.MUTATION_ERROR,
+            value: error,
+          });
+          onError && onError();
+        },
+        onSuccess: () => {
+          onSuccess && onSuccess();
+          dispatch({
+            type: ReducerActionsEnum.SET_NOTIFICATION,
+            value: { message: "Note deleted", severity: "success" },
+          });
+        },
+      },
     );
   };
+
+  useEffect(() => {
+    if (state.deleteNoteConfirm && state.deleteNote) {
+      handleNoteDelete(state.deleteNote.id, () => {
+        dispatch({ type: ReducerActionsEnum.DELETE_NOTE_FINISH });
+      });
+    }
+  }, [state.deleteNoteConfirm, state.deleteNote]);
 
   const handleNoteUpdate = (
     noteId: number,
@@ -376,12 +454,31 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
         method: "PUT",
         data: validationResult.data,
       },
-      { onError, onSuccess, onSettled: () => dispatch({ type: ReducerActionsEnum.EDIT_STOP }) },
+      {
+        onError: (error) => {
+          dispatch({
+            type: ReducerActionsEnum.MUTATION_ERROR,
+            value: error,
+          });
+          onError && onError();
+        },
+        onSuccess: () => {
+          dispatch({
+            type: ReducerActionsEnum.SET_NOTIFICATION,
+            value: { message: "Note updated", severity: "success" },
+          });
+          onSuccess && onSuccess();
+        },
+        onSettled: () => dispatch({ type: ReducerActionsEnum.EDIT_STOP }),
+      },
     );
   };
 
   const handleStartNoteEdit = (note: Note) => {
     dispatch({ type: ReducerActionsEnum.EDIT_START, value: note });
+  };
+  const handleStartNoteDelete = (note: Note) => {
+    dispatch({ type: ReducerActionsEnum.DELETE_NOTE_START, value: note });
   };
 
   const handleStopEdit = () => {
@@ -409,6 +506,7 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
       value={{
         ...state,
         onStartEditNote: handleStartNoteEdit,
+        onStartDeleteNote: handleStartNoteDelete,
         onStopEditNote: handleStopEdit,
         onDeleteNote: handleNoteDelete,
         onUpdateNote: handleNoteUpdate,

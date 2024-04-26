@@ -14,7 +14,6 @@ export const getUserByEmail = async (email?: string): Promise<UserWithNotes | un
     where: eq(users.email, email),
     with: { notes: true },
   });
-  console.log(user);
   return user;
 };
 

@@ -1,10 +1,10 @@
+import { Box } from "@mui/material";
 import { NotesList } from "../components/notes/NotesList.tsx";
 import { TakeNote } from "../components/notes/TakeNote.tsx";
-import { Alert, Box, Snackbar } from "@mui/material";
-import { useNotes } from "../providers/UseNotes.tsx";
+import { ConfirmDeleteNote } from "../components/notes/ConfirmDeleteNote.tsx";
+import { Notification } from "../components/Notification.tsx";
 
 export function DashboardPage() {
-  const { notification, onClearNotification } = useNotes();
   return (
     <Box
       sx={{
@@ -14,21 +14,8 @@ export function DashboardPage() {
     >
       <TakeNote />
       <NotesList />
-      <Snackbar
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        open={notification !== undefined}
-        autoHideDuration={5000}
-        onClose={onClearNotification}
-      >
-        <Alert
-          onClose={onClearNotification}
-          severity={notification?.severity ?? "info"}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {notification?.message}
-        </Alert>
-      </Snackbar>
+      <Notification />
+      <ConfirmDeleteNote />
     </Box>
   );
 }
