@@ -1,13 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+/* eslint-disable @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment */
+import { createContext, ReactNode, useEffect, useReducer } from "react";
 import { useClerkMutation, useClerkQuery } from "../useClerkQuery.ts";
-import { editorState, Note } from "../components/notes/NoteTypes.ts";
+import { Note } from "../components/notes/NoteTypes.ts";
 
 type InsertNote = Pick<Note, "title" | "content">;
 
 interface NotesContextType {
   status: "pending" | "error" | "success";
-  error: Error | null;
+  error?: Error | null;
   isEditing: boolean;
   onDelete: (noteId: number, onSuccess?: () => void, onError?: () => void) => void;
   onUpdate: (
@@ -21,8 +21,11 @@ interface NotesContextType {
   onStopEdit: () => void;
   notes?: Note[];
   currentNote?: Note;
+  currentTag?: string;
+  currentSearch?: string;
 }
-export const NotesContext = createContext<NotesContextType>({
+
+const defaultContextValue: NotesContextType = {
   status: "pending",
   error: null,
   notes: [],
@@ -33,20 +36,83 @@ export const NotesContext = createContext<NotesContextType>({
   onStartEdit: (_: Note) => {},
   onStopEdit: () => {},
   currentNote: undefined,
-});
+  currentTag: undefined,
+  currentSearch: undefined,
+};
+export const NotesContext = createContext<NotesContextType>(defaultContextValue);
+
+const initialState: NotesReducerStateType = {
+  status: "pending",
+  error: null,
+  notes: [],
+  isEditing: false,
+  currentNote: undefined,
+  currentTag: undefined,
+  currentSearch: undefined,
+};
+
+enum ReducerActionsEnum {
+  MUTATION_SUCCESS,
+  MUTATION_ERROR,
+  EDIT_START,
+  EDIT_STOP,
+  QUERY_ERROR,
+}
+
+type NotesReducerStateType = Omit<
+  NotesContextType,
+  "onCreate" | "onUpdate" | "onDelete" | "onStartEdit" | "onStopEdit"
+>;
+type NotesReducerActionValueType = unknown | null;
+type NotesReducerActionType = {
+  type: ReducerActionsEnum;
+  value?: NotesReducerActionValueType;
+};
+
+// @ts-ignore
+function notesReducer(state: NotesReducerStateType, action: NotesReducerActionType) {
+  switch (action.type) {
+    case ReducerActionsEnum.MUTATION_SUCCESS:
+      return {
+        ...state,
+        currentNote: undefined,
+        error: null,
+      };
+    case ReducerActionsEnum.MUTATION_ERROR:
+    case ReducerActionsEnum.QUERY_ERROR:
+      return {
+        ...state,
+        error: action.value,
+      };
+    case ReducerActionsEnum.EDIT_START:
+      return {
+        ...state,
+        currentNote: action.value,
+        isEditing: true,
+      };
+    case ReducerActionsEnum.EDIT_STOP:
+      return {
+        ...state,
+        currentNote: undefined,
+        isEditing: false,
+      };
+  }
+  return state;
+}
 
 export const NotesProvider = ({ children }: { children: ReactNode }) => {
-  const [edit, setEditState] = useState<editorState>("closed");
-  const [currentNote, setCurrentNote] = useState<Note>();
-  const [error, setError] = useState<Error | null>(null);
+  // @ts-ignore
+  const [state, dispatch] = useReducer(notesReducer, initialState);
+  const { isEditing, currentNote, currentTag, currentSearch, error } = state;
 
   const mu = useClerkMutation(
     () => {
-      setCurrentNote(undefined);
-      setError(null);
+      // @ts-ignore
+      dispatch({ type: ReducerActionsEnum.MUTATION_SUCCESS });
     },
     (error) => {
-      setError(error);
+      // @ts-ignore
+      dispatch({ type: ReducerActionsEnum.MUTATION_SUCCESS, value: error });
     },
   );
 
@@ -70,6 +136,7 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
       { onError, onSuccess },
     );
   };
+
   const handleUpdate = (
     noteId: number,
     note: InsertNote,
@@ -87,19 +154,20 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const handleStartEdit = (note: Note) => {
-    setCurrentNote(note);
-    setEditState("open");
+    // @ts-ignore
+    dispatch({ type: ReducerActionsEnum.EDIT_START, value: note });
   };
 
   const handleStopEdit = () => {
-    setCurrentNote(undefined);
-    setEditState("closed");
+    // @ts-ignore
+    dispatch({ type: ReducerActionsEnum.EDIT_STOP });
   };
 
   const { status, error: queryError, data: notes } = useClerkQuery<Note[]>("api/notes");
   useEffect(() => {
     if (queryError) {
-      setError(queryError);
+      // @ts-ignore
+      dispatch({ type: ReducerActionsEnum.QUERY_ERROR, value: queryError });
     }
   }, [queryError]);
   return (
@@ -109,7 +177,9 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
         error,
         notes,
         currentNote,
-        isEditing: edit === "open",
+        currentTag,
+        currentSearch,
+        isEditing,
         onStartEdit: handleStartEdit,
         onStopEdit: handleStopEdit,
         onDelete: handleDelete,
@@ -121,7 +191,3 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     </NotesContext.Provider>
   );
 };
-
-export function useNotes() {
-  return useContext(NotesContext);
-}

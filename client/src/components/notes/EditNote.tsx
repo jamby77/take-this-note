@@ -8,7 +8,8 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { TransitionProps } from "@mui/material/transitions";
 import { Slide } from "@mui/material";
-import { useNotes } from "../../providers/NotesProvider.tsx";
+
+import { useNotes } from "../../providers/UseNotes.tsx";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -37,6 +38,8 @@ export function EditNote() {
       open={isOpen}
       onClose={onClose}
       TransitionComponent={Transition}
+      fullWidth
+      maxWidth="sm"
       PaperProps={{
         component: "form",
         onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
@@ -59,18 +62,22 @@ export function EditNote() {
           label="Note Title"
           type="text"
           fullWidth
-          variant="standard"
+          variant="outlined"
           defaultValue={note?.title}
+          inputProps={{ maxlength: 20 }}
         />
         <TextField
+          inputProps={{ maxlength: 500 }}
           multiline
+          minRows={3}
+          maxRows={10}
           required
           margin="dense"
           id="content"
           name="content"
           label="Note Content"
           fullWidth
-          variant="standard"
+          variant="outlined"
           defaultValue={note?.content}
         />
       </DialogContent>

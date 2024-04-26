@@ -13,7 +13,8 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { NoteTagsEdit } from "./NoteTagsEdit.tsx";
-import { useNotes } from "../../providers/NotesProvider.tsx";
+
+import { useNotes } from "../../providers/UseNotes.tsx";
 
 const TakeNoteStatus = {
   Idle: "idle",

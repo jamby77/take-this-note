@@ -1,6 +1,7 @@
 import { db } from "./db";
 import { and, desc, eq, ilike, sql } from "drizzle-orm";
 import { Note, NoteInsert, notes, Tag, tags } from "./schema";
+import { parseNote, parseTag } from "../shared/validations";
 
 export const getUserNotes = async (
   userId: number,
@@ -67,6 +68,12 @@ export const getNoteById = async (id: number) => {
 };
 
 export const createNote = async (newNote: NoteInsert) => {
+  const validationResult = parseNote(newNote);
+  if (!validationResult.success) {
+    throw validationResult.error;
+  }
+  newNote.title = validationResult.data.title;
+  newNote.content = validationResult.data.content;
   const returning = await db
     .insert(notes)
     .values(newNote)
@@ -75,6 +82,12 @@ export const createNote = async (newNote: NoteInsert) => {
 };
 
 export const updateNote = async (id: number, note: NoteInsert) => {
+  const validationResult = parseNote(note);
+  if (!validationResult.success) {
+    throw validationResult.error;
+  }
+  note.title = validationResult.data.title;
+  note.content = validationResult.data.content;
   const returning = await db
     .update(notes)
     .set({
@@ -106,14 +119,25 @@ export const getTagByName = async (name: string) => {
 };
 
 export const createTag = async (name: string) => {
-  const returning = await db.insert(tags).values({ name }).returning({ name: tags.name });
+  const validationResult = parseTag({ name });
+  if (!validationResult.success) {
+    throw validationResult.error;
+  }
+  const returning = await db
+    .insert(tags)
+    .values({ name: validationResult.data.name })
+    .returning({ name: tags.name });
   return returning.pop();
 };
 
 export const updateTag = async (name: string, newName: string) => {
+  const validationResult = parseTag({ name: newName });
+  if (!validationResult.success) {
+    throw validationResult.error;
+  }
   const returning = await db
     .update(tags)
-    .set({ name: newName })
+    .set({ name: validationResult.data.name })
     .where(eq(tags.name, name))
     .returning({ name: tags.name });
   return returning.pop();

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { createNote, deleteNote, getNoteById, getUserNotes, updateNote } from "../data/notes";
 import { WithAuthProp } from "@clerk/clerk-sdk-node";
 import { getPagination, StatusCodes } from "../router";
+import { ZodError } from "zod";
 
 const listNotes = async (req: WithAuthProp<Request>, res: Response) => {
   const user = req.user;
@@ -45,17 +46,28 @@ const getNote = async (req: WithAuthProp<Request>, res: Response) => {
 const createUserNote = async (req: WithAuthProp<Request>, res: Response) => {
   const user = req.user;
   if (!user) {
-    return res.sendStatus(401);
+    return res.sendStatus(StatusCodes.UNAUTHORIZED);
   }
   const { title, content } = req.body;
   if (!title || !content) {
-    res.status(400);
+    res.status(StatusCodes.BAD_REQUEST);
     return res.send("Title and content are required");
   }
-  const note = await createNote({ title, content, userId: user.id });
-  res.status(201);
-
-  return res.json(note);
+  try {
+    const note = await createNote({
+      title,
+      content,
+      userId: user.id,
+    });
+    res.status(StatusCodes.CREATED);
+    return res.json(note);
+  } catch (e) {
+    res.status(StatusCodes.BAD_REQUEST);
+    if (e instanceof ZodError) {
+      return res.send(e.issues);
+    }
+    return res.send("Error creating note");
+  }
 };
 
 const updateUserNote = async (req: WithAuthProp<Request>, res: Response) => {
@@ -79,31 +91,43 @@ const updateUserNote = async (req: WithAuthProp<Request>, res: Response) => {
     return res.send("You do not have permission to update this note");
   }
 
-  const note = await updateNote(+id, { title, content, userId: exisingNote.userId });
-  return res.json(note);
+  try {
+    const note = await updateNote(+id, {
+      title,
+      content,
+      userId: exisingNote.userId,
+    });
+    return res.json(note);
+  } catch (e) {
+    res.status(StatusCodes.BAD_REQUEST);
+    if (e instanceof ZodError) {
+      return res.send(e.issues);
+    }
+    return res.send("Error updating note");
+  }
 };
 
 const deleteUserNote = async (req: WithAuthProp<Request>, res: Response) => {
   const user = req.user;
   if (!user) {
-    return res.sendStatus(401);
+    return res.sendStatus(StatusCodes.UNAUTHORIZED);
   }
   const { id } = req.params;
   if (!id) {
-    res.status(400);
+    res.status(StatusCodes.BAD_REQUEST);
     return res.send("Id is required");
   }
   const exisingNote = await getNoteById(parseInt(id, 10));
   if (!exisingNote) {
-    res.status(404);
+    res.status(StatusCodes.NOT_FOUND);
     return res.send("Note not found");
   }
   if (exisingNote.userId !== user.id) {
-    res.status(403);
+    res.status(StatusCodes.FORBIDDEN);
     return res.send("You do not have permission to delete this note");
   }
   await deleteNote(parseInt(id, 10));
-  return res.sendStatus(200);
+  return res.sendStatus(StatusCodes.NO_CONTENT);
 };
 
 export const notesController = {

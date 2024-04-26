@@ -13,7 +13,8 @@ import EditNoteIcon from "@mui/icons-material/EditNoteTwoTone";
 import { Note } from "./NoteTypes.ts";
 import { NodeCardTags } from "./NodeCardTags.tsx";
 import { NoteTimestamps } from "./NoteTimestamps.tsx";
-import { useNotes } from "../../providers/NotesProvider.tsx";
+
+import { useNotes } from "../../providers/UseNotes.tsx";
 
 export const NoteCard = ({ note }: { note: Note }) => {
   const { onStartEdit } = useNotes();

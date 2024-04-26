@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { createTag, deleteTag, getTagByName, getTagNotes, getTags, updateTag } from "../data/notes";
 import { WithAuthProp } from "@clerk/clerk-sdk-node";
 import { getPagination, StatusCodes } from "../router";
+import { ZodError } from "zod";
 
 const listTags = async (req: WithAuthProp<Request>, res: Response) => {
   const user = req.user;
@@ -38,9 +39,16 @@ const create = async (req: WithAuthProp<Request>, res: Response) => {
     res.sendStatus(StatusCodes.BAD_REQUEST);
     return res.send("Tag is required");
   }
-  const tag = await createTag(tagName);
-  res.status(StatusCodes.CREATED);
-  return res.json(tag);
+  try {
+    const tag = await createTag(tagName);
+    res.status(StatusCodes.CREATED);
+    return res.json(tag);
+  } catch (e) {
+    if (e instanceof ZodError) {
+      return res.status(StatusCodes.BAD_REQUEST).json(e.issues);
+    }
+    return res.sendStatus(StatusCodes.BAD_REQUEST);
+  }
 };
 
 const updateTagName = async (req: WithAuthProp<Request>, res: Response) => {
@@ -60,8 +68,15 @@ const updateTagName = async (req: WithAuthProp<Request>, res: Response) => {
     return res.send("Tag not found");
   }
 
-  const newTag = await updateTag(tag, tagName);
-  return res.json(newTag);
+  try {
+    const newTag = await updateTag(tag, tagName);
+    return res.json(newTag);
+  } catch (e) {
+    if (e instanceof ZodError) {
+      return res.status(StatusCodes.BAD_REQUEST).json(e.issues);
+    }
+    return res.sendStatus(StatusCodes.BAD_REQUEST);
+  }
 };
 
 const deleteATag = async (req: WithAuthProp<Request>, res: Response) => {

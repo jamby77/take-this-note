@@ -2,9 +2,9 @@ import Grid from "@mui/material/Unstable_Grid2";
 import { NoteCard } from "./NoteCard.tsx";
 import { Note } from "./NoteTypes.ts";
 import { LoadingIndicator } from "../LoadingIndicator.tsx";
-import { useNotes } from "../../providers/NotesProvider.tsx";
 import { EditNote } from "./EditNote.tsx";
 import { Box } from "@mui/material";
+import { useNotes } from "../../providers/UseNotes.tsx";
 
 export function NotesList() {
   const { status, error, notes } = useNotes();

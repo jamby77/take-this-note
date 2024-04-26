@@ -1,4 +1,13 @@
-import { index, integer, pgTable, primaryKey, serial, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  index,
+  integer,
+  pgTable,
+  primaryKey,
+  serial,
+  text,
+  timestamp,
+  varchar,
+} from "drizzle-orm/pg-core";
 import { InferInsertModel, InferSelectModel, relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -37,7 +46,7 @@ export const notes = pgTable(
   "notes",
   {
     id: serial("id").primaryKey(),
-    title: text("title").notNull(),
+    title: varchar("title", { length: 100 }).notNull(),
     content: text("content").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at"),
@@ -69,7 +78,7 @@ export type NoteInsert = InferInsertModel<typeof notes>;
 
 export const tags = pgTable("tags", {
   id: serial("id").primaryKey(),
-  name: text("name").unique().notNull(),
+  name: varchar("name", { length: 50 }).unique().notNull(),
 });
 
 export type Tag = InferSelectModel<typeof tags>;
