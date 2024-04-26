@@ -1,6 +1,6 @@
 import { Autocomplete, createFilterOptions, TextField } from "@mui/material";
-import { useEffect, useState } from "react";
-import { useClerkQuery } from "../../useClerkQuery.ts";
+import { useState } from "react";
+import { useNotes } from "../../providers/UseNotes.tsx";
 
 interface OptionType {
   name: string;
@@ -9,30 +9,9 @@ interface OptionType {
 
 const filter = createFilterOptions<OptionType>();
 
-export const NoteTagsEdit = ({
-  initialTags,
-  onTagsChange,
-}: {
-  initialTags?: OptionType[];
-  onTagsChange?: (tags: OptionType[]) => void;
-}) => {
-  const [tags, setTags] = useState<OptionType[]>(initialTags || []);
-
-  const [value, setValue] = useState<OptionType[]>([]);
-
-  const { data, status } = useClerkQuery("api/tags");
-
-  useEffect(() => {
-    if (status === "success" && data) {
-      setTags(data as OptionType[]);
-    }
-  }, [status, data]);
-  useEffect(() => {
-    if (initialTags) {
-      setValue(initialTags);
-    }
-  }, [initialTags]);
-
+export const NoteTagsEdit = () => {
+  const { currentTags, tags, onTagsChange } = useNotes();
+  const [value, setValue] = useState<OptionType[]>(currentTags || []);
   return (
     <div>
       <Autocomplete
@@ -45,7 +24,7 @@ export const NoteTagsEdit = ({
           return option.name;
         }}
         renderInput={(params) => <TextField {...params} label="Note tags" placeholder="Tags" />}
-        options={tags}
+        options={tags || []}
         value={value}
         filterOptions={(options, params) => {
           const filtered = filter(options, params);

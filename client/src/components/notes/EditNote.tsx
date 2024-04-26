@@ -10,6 +10,7 @@ import { TransitionProps } from "@mui/material/transitions";
 import { Slide } from "@mui/material";
 
 import { useNotes } from "../../providers/UseNotes.tsx";
+import { NoteTagsEdit } from "./NoteTagsEdit.tsx";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -80,6 +81,7 @@ export function EditNote() {
           variant="outlined"
           defaultValue={note?.content}
         />
+        <NoteTagsEdit />
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>

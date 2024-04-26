@@ -23,6 +23,7 @@ interface NotesContextType {
    * Notes loaded from server
    */
   notes?: Note[];
+  tags?: TagValidation[];
   /**
    * currently selected note
    */
@@ -30,7 +31,7 @@ interface NotesContextType {
   /**
    * currently selected tag
    */
-  currentTag?: string;
+  currentTag?: TagValidation;
   /**
    * currently selected note's tags
    */
@@ -83,6 +84,7 @@ const defaultContextValue: NotesContextType = {
   status: "pending",
   error: null,
   notes: [],
+  tags: [],
   isEditing: false,
   currentNote: undefined,
   currentTag: undefined,
@@ -123,10 +125,11 @@ export enum ReducerActionsEnum {
   QUERY_ERROR,
   CREATE_ERROR,
   SET_SEARCH,
-  SET_TAGS,
+  SET_CURRENT_TAGS,
   SET_NOTE,
   SET_TAG,
   SET_NOTES,
+  SET_TAGS,
   SET_STATUS,
 }
 
@@ -164,7 +167,7 @@ function notesReducer(state: NotesReducerStateType, action: NotesReducerActionTy
         ...state,
         currentSearch: action.value,
       };
-    case ReducerActionsEnum.SET_TAGS:
+    case ReducerActionsEnum.SET_CURRENT_TAGS:
       return {
         ...state,
         currentTags: action.value,
@@ -198,9 +201,20 @@ function notesReducer(state: NotesReducerStateType, action: NotesReducerActionTy
         error: action.value,
       };
     case ReducerActionsEnum.EDIT_START:
+      let { tags = [] } = action.value;
+      if (tags.length > 0) {
+        // @ts-ignore
+        tags = tags.map((tag) => {
+          if (typeof tag === "string") {
+            return { name: tag };
+          }
+          return tag;
+        });
+      }
       return {
         ...state,
         currentNote: action.value,
+        currentTags: tags,
         isEditing: true,
       };
     case ReducerActionsEnum.EDIT_STOP:
@@ -214,14 +228,17 @@ function notesReducer(state: NotesReducerStateType, action: NotesReducerActionTy
         ...state,
         status: action.value,
       };
+    case ReducerActionsEnum.SET_TAGS:
+      return {
+        ...state,
+        tags: action.value,
+      };
   }
   return state;
 }
 
 export const NotesProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(notesReducer, initialState);
-  const { isEditing, currentNote, currentTag, currentTags, currentSearch, error, notes, status } =
-    state;
 
   const mu = useClerkMutation(
     () => {
@@ -304,20 +321,13 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const handleSetTags = (tags: (string | TagValidation)[]) => {
-    dispatch({ type: ReducerActionsEnum.SET_TAGS, value: tags });
+    dispatch({ type: ReducerActionsEnum.SET_CURRENT_TAGS, value: tags });
   };
 
   return (
     <NotesContext.Provider
       value={{
-        status,
-        error,
-        notes,
-        currentNote,
-        currentTag,
-        currentTags,
-        currentSearch,
-        isEditing,
+        ...state,
         onStartEditNote: handleStartNoteEdit,
         onStopEditNote: handleStopEdit,
         onDeleteNote: handleNoteDelete,

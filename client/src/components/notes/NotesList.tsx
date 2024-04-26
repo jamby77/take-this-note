@@ -8,6 +8,7 @@ import { useNotes } from "../../providers/UseNotes.tsx";
 import { useClerkQuery } from "../../useClerkQuery.ts";
 import { useEffect } from "react";
 import { ReducerActionsEnum } from "../../providers/NotesProvider.tsx";
+import { NoteTags } from "./NoteTags.tsx";
 
 export function NotesList() {
   const { status, error, notes, dispatch, currentSearch } = useNotes();
@@ -26,8 +27,10 @@ export function NotesList() {
     }
     dispatch && dispatch({ type: ReducerActionsEnum.SET_STATUS, value: status });
   }, [result.status, result.data, result.error, dispatch]);
+
   return (
     <Box>
+      <NoteTags />
       {status === "pending" && <LoadingIndicator />}
       {status === "error" && error && <Typography color="error">Error: {error.message}</Typography>}
       {status === "success" && notes && Array.isArray(notes) && (

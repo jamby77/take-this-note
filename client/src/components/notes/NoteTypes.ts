@@ -6,4 +6,5 @@ export interface Note {
   updatedAt?: Date | string;
   tags?: string[];
 }
+
 export type editorState = "open" | "closed";
