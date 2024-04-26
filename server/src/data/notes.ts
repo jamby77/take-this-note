@@ -128,17 +128,14 @@ const addRemoveNoteTags = async (noteId: number, tagNames: string[]) => {
   let currentNoteTags = await getNoteTags(noteId);
   const newTags = tagNames.filter((name) => !currentNoteTags.find((tag) => tag.name === name));
   const deletedTags = currentNoteTags.filter((tag) => !tagNames.find((name) => name === tag.name));
-  console.log({ noteId, currentNoteTags, tagNames, newTags, deletedTags });
   if (newTags.length) {
     for (const tag of newTags) {
       const tagObj = await createTag(tag);
       currentNoteTags.push(tagObj);
     }
     // add tags to note
-    await db
-      .insert(noteTags)
-      .values(currentNoteTags.map((tag) => ({ noteId, tagId: tag.id })))
-      .onConflictDoNothing();
+    const values = currentNoteTags.map((tag) => ({ noteId, tagId: tag.id }));
+    await db.insert(noteTags).values(values).onConflictDoNothing();
   }
   if (deletedTags.length) {
     for (const tag of deletedTags) {
@@ -173,11 +170,11 @@ export const createTag = async (name: string) => {
   if (!validationResult.success) {
     throw validationResult.error;
   }
-  const returning = await db
-    .insert(tags)
-    .values({ name: validationResult.data.name })
-    .onConflictDoNothing()
-    .returning();
+  const exists = await getTagByName(validationResult.data.name);
+  if (exists) {
+    return exists;
+  }
+  const returning = await db.insert(tags).values({ name: validationResult.data.name }).returning();
   return returning[0];
 };
 

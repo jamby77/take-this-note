@@ -231,6 +231,8 @@ function notesReducer(state: NotesReducerStateType, action: NotesReducerActionTy
         ...state,
         error: null,
         currentNote: undefined,
+        currentTag: undefined,
+        currentTags: [],
         isEditing: false,
       };
     case ReducerActionsEnum.SET_STATUS:
