@@ -137,8 +137,7 @@ const deleteUserNote = async (req: WithAuthProp<Request>, res: Response) => {
     return res.send("You do not have permission to delete this note");
   }
   await deleteNote(parseInt(id, 10));
-  console.log("deleted note", id);
-  res.status(StatusCodes.NO_CONTENT);
+  res.status(StatusCodes.OK);
   return res.json({ success: true });
 };
 
