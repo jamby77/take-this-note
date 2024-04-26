@@ -1,28 +1,82 @@
 /* eslint-disable @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment */
-import { createContext, ReactNode, useEffect, useReducer } from "react";
-import { useClerkMutation, useClerkQuery } from "../useClerkQuery.ts";
+import { createContext, Dispatch, ReactNode, useReducer } from "react";
+import { useClerkMutation } from "../useClerkQuery.ts";
 import { Note } from "../components/notes/NoteTypes.ts";
+import { parseNote, TagValidation } from "../shared/validations.ts";
 
 type InsertNote = Pick<Note, "title" | "content">;
 
 interface NotesContextType {
+  /**
+   *  loading status from server request
+   **/
   status: "pending" | "error" | "success";
+  /**
+   * Any errors
+   */
   error?: Error | null;
+  /**
+   * is editing dialog open
+   */
   isEditing: boolean;
-  onDelete: (noteId: number, onSuccess?: () => void, onError?: () => void) => void;
-  onUpdate: (
+  /**
+   * Notes loaded from server
+   */
+  notes?: Note[];
+  /**
+   * currently selected note
+   */
+  currentNote?: Note;
+  /**
+   * currently selected tag
+   */
+  currentTag?: string;
+  /**
+   * currently selected note's tags
+   */
+  currentTags?: TagValidation[];
+  /**
+   * currently search string
+   */
+  currentSearch?: string;
+  dispatch?: Dispatch<any>;
+  /**
+   * Perform note create
+   */
+  onCreateNote: (note: InsertNote, onSuccess?: () => void, onError?: () => void) => void;
+  /**
+   * Perform note update
+   */
+  onUpdateNote: (
     noteId: number,
     note: InsertNote,
     onSuccess?: () => void,
     onError?: () => void,
   ) => void;
-  onCreate: (note: InsertNote, onSuccess?: () => void, onError?: () => void) => void;
-  onStartEdit: (note: Note) => void;
-  onStopEdit: () => void;
-  notes?: Note[];
-  currentNote?: Note;
-  currentTag?: string;
-  currentSearch?: string;
+  /**
+   * Perform note delete
+   */
+  onDeleteNote: (noteId: number, onSuccess?: () => void, onError?: () => void) => void;
+  /**
+   * Start editing note
+   */
+  onStartEditNote: (note: Note) => void;
+  /**
+   * Stop editing note
+   */
+  onStopEditNote: () => void;
+  /**
+   * handle note search
+   */
+  onNotesSearch: (search: string) => void;
+  /**
+   * Handle tags change
+   */
+  onTagsChange: (tags: (string | TagValidation)[]) => void;
+  /**
+   * handle filter by tag
+   */
+  onTagFilter: (tag: string) => void;
 }
 
 const defaultContextValue: NotesContextType = {
@@ -30,16 +84,68 @@ const defaultContextValue: NotesContextType = {
   error: null,
   notes: [],
   isEditing: false,
-  onDelete: (_: number) => {},
-  onUpdate: (_: number, __: InsertNote) => {},
-  onCreate: (_: InsertNote) => {},
-  onStartEdit: (_: Note) => {},
-  onStopEdit: () => {},
   currentNote: undefined,
   currentTag: undefined,
+  currentTags: [],
   currentSearch: undefined,
+  onDeleteNote: (_: number) => {
+    throw new Error("Function not implemented.");
+  },
+  onUpdateNote: (_: number, __: InsertNote) => {
+    throw new Error("Function not implemented.");
+  },
+  onCreateNote: (_: InsertNote) => {
+    throw new Error("Function not implemented.");
+  },
+  onStartEditNote: (_: Note) => {
+    throw new Error("Function not implemented.");
+  },
+  onStopEditNote: () => {
+    throw new Error("Function not implemented.");
+  },
+  onNotesSearch: function (search: string): void {
+    throw new Error("Function not implemented." + search);
+  },
+  onTagsChange: function (tags: (string | TagValidation)[]): void {
+    throw new Error("Function not implemented." + tags);
+  },
+  onTagFilter: function (tag: string): void {
+    throw new Error("Function not implemented." + tag);
+  },
 };
 export const NotesContext = createContext<NotesContextType>(defaultContextValue);
+
+export enum ReducerActionsEnum {
+  MUTATION_SUCCESS,
+  MUTATION_ERROR,
+  EDIT_START,
+  EDIT_STOP,
+  QUERY_ERROR,
+  CREATE_ERROR,
+  SET_SEARCH,
+  SET_TAGS,
+  SET_NOTE,
+  SET_TAG,
+  SET_NOTES,
+  SET_STATUS,
+}
+
+type NotesReducerStateType = Omit<
+  NotesContextType,
+  | "onCreateNote"
+  | "onUpdateNote"
+  | "onDeleteNote"
+  | "onStartEditNote"
+  | "onStopEditNote"
+  | "onTagFilter"
+  | "onNotesSearch"
+  | "onTagsChange"
+>;
+// type NotesReducerActionValueType = unknown | null;
+type NotesReducerActionType = {
+  type: ReducerActionsEnum;
+  value?: any;
+};
 
 const initialState: NotesReducerStateType = {
   status: "pending",
@@ -49,29 +155,35 @@ const initialState: NotesReducerStateType = {
   currentNote: undefined,
   currentTag: undefined,
   currentSearch: undefined,
+  currentTags: [],
 };
-
-enum ReducerActionsEnum {
-  MUTATION_SUCCESS,
-  MUTATION_ERROR,
-  EDIT_START,
-  EDIT_STOP,
-  QUERY_ERROR,
-}
-
-type NotesReducerStateType = Omit<
-  NotesContextType,
-  "onCreate" | "onUpdate" | "onDelete" | "onStartEdit" | "onStopEdit"
->;
-type NotesReducerActionValueType = unknown | null;
-type NotesReducerActionType = {
-  type: ReducerActionsEnum;
-  value?: NotesReducerActionValueType;
-};
-
-// @ts-ignore
 function notesReducer(state: NotesReducerStateType, action: NotesReducerActionType) {
   switch (action.type) {
+    case ReducerActionsEnum.SET_SEARCH:
+      return {
+        ...state,
+        currentSearch: action.value,
+      };
+    case ReducerActionsEnum.SET_TAGS:
+      return {
+        ...state,
+        currentTags: action.value,
+      };
+    case ReducerActionsEnum.SET_NOTE:
+      return {
+        ...state,
+        currentNote: action.value,
+      };
+    case ReducerActionsEnum.SET_TAG:
+      return {
+        ...state,
+        currentTag: action.value,
+      };
+    case ReducerActionsEnum.SET_NOTES:
+      return {
+        ...state,
+        notes: action.value,
+      };
     case ReducerActionsEnum.MUTATION_SUCCESS:
       return {
         ...state,
@@ -79,6 +191,7 @@ function notesReducer(state: NotesReducerStateType, action: NotesReducerActionTy
         error: null,
       };
     case ReducerActionsEnum.MUTATION_ERROR:
+    case ReducerActionsEnum.CREATE_ERROR:
     case ReducerActionsEnum.QUERY_ERROR:
       return {
         ...state,
@@ -96,38 +209,50 @@ function notesReducer(state: NotesReducerStateType, action: NotesReducerActionTy
         currentNote: undefined,
         isEditing: false,
       };
+    case ReducerActionsEnum.SET_STATUS:
+      return {
+        ...state,
+        status: action.value,
+      };
   }
   return state;
 }
 
 export const NotesProvider = ({ children }: { children: ReactNode }) => {
-  // @ts-ignore
   const [state, dispatch] = useReducer(notesReducer, initialState);
-  const { isEditing, currentNote, currentTag, currentSearch, error } = state;
+  const { isEditing, currentNote, currentTag, currentTags, currentSearch, error, notes, status } =
+    state;
 
   const mu = useClerkMutation(
     () => {
-      // @ts-ignore
       dispatch({ type: ReducerActionsEnum.MUTATION_SUCCESS });
     },
     (error) => {
-      // @ts-ignore
       dispatch({ type: ReducerActionsEnum.MUTATION_SUCCESS, value: error });
     },
   );
 
-  const handleCreate = (note: InsertNote, onSuccess?: () => void, onError?: () => void) => {
+  const handleNoteCreate = (newNote: InsertNote, onSuccess?: () => void, onError?: () => void) => {
+    const validationResult = parseNote(newNote);
+    if (!validationResult.success) {
+      dispatch({
+        type: ReducerActionsEnum.CREATE_ERROR,
+        value: validationResult.error,
+      });
+      onError && onError();
+      return;
+    }
     mu.mutate(
       {
         url: "api/notes",
         method: "POST",
-        data: note,
+        data: validationResult.data,
       },
       { onError, onSuccess },
     );
   };
 
-  const handleDelete = (noteId: number, onSuccess?: () => void, onError?: () => void) => {
+  const handleNoteDelete = (noteId: number, onSuccess?: () => void, onError?: () => void) => {
     mu.mutate(
       {
         url: `api/notes/${noteId}`,
@@ -137,39 +262,51 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const handleUpdate = (
+  const handleNoteUpdate = (
     noteId: number,
-    note: InsertNote,
+    newNote: InsertNote,
     onSuccess?: () => void,
     onError?: () => void,
   ) => {
+    const validationResult = parseNote(newNote);
+    if (!validationResult.success) {
+      dispatch({
+        type: ReducerActionsEnum.CREATE_ERROR,
+        value: validationResult.error,
+      });
+      onError && onError();
+      return;
+    }
     mu.mutate(
       {
         url: `api/notes/${noteId}`,
         method: "PUT",
-        data: note,
+        data: validationResult.data,
       },
       { onError, onSuccess },
     );
   };
 
-  const handleStartEdit = (note: Note) => {
-    // @ts-ignore
+  const handleStartNoteEdit = (note: Note) => {
     dispatch({ type: ReducerActionsEnum.EDIT_START, value: note });
   };
 
   const handleStopEdit = () => {
-    // @ts-ignore
     dispatch({ type: ReducerActionsEnum.EDIT_STOP });
   };
 
-  const { status, error: queryError, data: notes } = useClerkQuery<Note[]>("api/notes");
-  useEffect(() => {
-    if (queryError) {
-      // @ts-ignore
-      dispatch({ type: ReducerActionsEnum.QUERY_ERROR, value: queryError });
-    }
-  }, [queryError]);
+  const handleSearch = (search: string) => {
+    dispatch({ type: ReducerActionsEnum.SET_SEARCH, value: search });
+  };
+
+  const handleFilterByTag = (tag: string) => {
+    dispatch({ type: ReducerActionsEnum.SET_TAG, value: tag });
+  };
+
+  const handleSetTags = (tags: (string | TagValidation)[]) => {
+    dispatch({ type: ReducerActionsEnum.SET_TAGS, value: tags });
+  };
+
   return (
     <NotesContext.Provider
       value={{
@@ -178,13 +315,18 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
         notes,
         currentNote,
         currentTag,
+        currentTags,
         currentSearch,
         isEditing,
-        onStartEdit: handleStartEdit,
-        onStopEdit: handleStopEdit,
-        onDelete: handleDelete,
-        onUpdate: handleUpdate,
-        onCreate: handleCreate,
+        onStartEditNote: handleStartNoteEdit,
+        onStopEditNote: handleStopEdit,
+        onDeleteNote: handleNoteDelete,
+        onUpdateNote: handleNoteUpdate,
+        onCreateNote: handleNoteCreate,
+        onNotesSearch: handleSearch,
+        onTagFilter: handleFilterByTag,
+        onTagsChange: handleSetTags,
+        dispatch,
       }}
     >
       {children}

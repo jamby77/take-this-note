@@ -22,7 +22,7 @@ const Transition = React.forwardRef(function Transition(
 });
 
 export function EditNote() {
-  const { currentNote: note, isEditing: open, onStopEdit, onUpdate } = useNotes();
+  const { currentNote: note, isEditing: open, onStopEditNote, onUpdateNote } = useNotes();
 
   const [isOpen, setIsOpen] = useState(false);
   useEffect(() => {
@@ -31,7 +31,7 @@ export function EditNote() {
 
   const onClose = () => {
     setIsOpen(false);
-    onStopEdit();
+    onStopEditNote();
   };
   return (
     <Dialog
@@ -47,7 +47,7 @@ export function EditNote() {
           const formData = new FormData(event.currentTarget);
           const title = formData.get("title") as string;
           const content = formData.get("content") as string;
-          onUpdate(note?.id as number, { title, content });
+          onUpdateNote(note?.id as number, { title, content });
         },
       }}
     >
@@ -64,10 +64,10 @@ export function EditNote() {
           fullWidth
           variant="outlined"
           defaultValue={note?.title}
-          inputProps={{ maxlength: 20 }}
+          inputProps={{ maxLength: 20 }}
         />
         <TextField
-          inputProps={{ maxlength: 500 }}
+          inputProps={{ maxLength: 500 }}
           multiline
           minRows={3}
           maxRows={10}

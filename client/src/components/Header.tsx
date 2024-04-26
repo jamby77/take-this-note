@@ -1,5 +1,6 @@
-import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
+import { ChangeEvent } from "react";
 import { Link } from "react-router-dom";
+import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
 import {
   alpha,
   AppBar,
@@ -11,6 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import { useNotes } from "../providers/UseNotes.tsx";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -25,6 +27,7 @@ const Search = styled("div")(({ theme }) => ({
     marginLeft: theme.spacing(1),
     width: "auto",
   },
+  flexGrow: 1, // for search box
 }));
 const SearchIconWrapper = styled("div")(({ theme }) => ({
   padding: theme.spacing(0, 2),
@@ -54,6 +57,10 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 export function Header() {
+  const { onNotesSearch, currentSearch } = useNotes();
+  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
+    onNotesSearch(e.target.value);
+  };
   return (
     <AppBar position="sticky">
       <Container maxWidth="xl">
@@ -68,7 +75,7 @@ export function Header() {
               fontWeight: 700,
               letterSpacing: ".3rem",
               textDecoration: "none",
-              flexGrow: 1,
+              flexGrow: 0,
               textTransform: "uppercase",
             }}
           >
@@ -80,7 +87,12 @@ export function Header() {
             <SearchIconWrapper>
               <SearchIcon />
             </SearchIconWrapper>
-            <StyledInputBase placeholder="Search…" inputProps={{ "aria-label": "search" }} />
+            <StyledInputBase
+              placeholder="Search…"
+              inputProps={{ "aria-label": "search" }}
+              value={currentSearch}
+              onChange={handleSearch}
+            />
           </Search>
           <Box
             sx={{

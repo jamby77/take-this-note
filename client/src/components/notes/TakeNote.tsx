@@ -29,7 +29,7 @@ export const TakeNote = () => {
   const [status, setStatus] = useState<TakeNoteStatusType>(TakeNoteStatus.Idle);
   const [note, setNote] = useState("");
   const textRef = useRef<HTMLTextAreaElement | null>(null);
-  const { onCreate } = useNotes();
+  const { onCreateNote } = useNotes();
 
   const takeNoteHandler = () => {
     setStatus(TakeNoteStatus.Writing);
@@ -54,7 +54,7 @@ export const TakeNote = () => {
     if (!content) {
       content = title;
     }
-    onCreate(
+    onCreateNote(
       { title, content },
       () => {
         setStatus(TakeNoteStatus.Success);

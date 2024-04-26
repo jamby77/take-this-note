@@ -12,6 +12,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createTheme, ThemeProvider, useMediaQuery } from "@mui/material";
 import { useMemo } from "react";
+import { NotesProvider } from "./providers/NotesProvider.tsx";
 
 const queryClient = new QueryClient();
 if (!PUBLISHABLE_KEY) {
@@ -34,14 +35,16 @@ function App() {
   return (
     <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider theme={theme}>
-          <CssBaseline enableColorScheme />
-          <Header />
-          <main>
-            <Outlet />
-          </main>
-          <ReactQueryDevtools initialIsOpen={false} />
-        </ThemeProvider>
+        <NotesProvider>
+          <ThemeProvider theme={theme}>
+            <CssBaseline enableColorScheme />
+            <Header />
+            <main>
+              <Outlet />
+            </main>
+            <ReactQueryDevtools initialIsOpen={false} />
+          </ThemeProvider>
+        </NotesProvider>
       </QueryClientProvider>
     </ClerkProvider>
   );
