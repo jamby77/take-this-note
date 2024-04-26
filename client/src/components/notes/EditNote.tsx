@@ -12,6 +12,7 @@ import { Slide, Typography } from "@mui/material";
 import { useNotes } from "../../providers/UseNotes.tsx";
 import { NoteTagsEdit } from "./NoteTagsEdit.tsx";
 import { ZodError } from "zod";
+import { ReducerActionsEnum } from "../../providers/NotesProvider.tsx";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -24,7 +25,14 @@ const Transition = React.forwardRef(function Transition(
 });
 
 export function EditNote() {
-  const { currentNote: note, isEditing: open, onStopEditNote, onUpdateNote, error } = useNotes();
+  const {
+    currentNote: note,
+    isEditing: open,
+    onStopEditNote,
+    onUpdateNote,
+    error,
+    dispatch,
+  } = useNotes();
 
   const [isOpen, setIsOpen] = useState(false);
   useEffect(() => {
@@ -63,7 +71,13 @@ export function EditNote() {
           const formData = new FormData(event.currentTarget);
           const title = formData.get("title") as string;
           const content = formData.get("content") as string;
-          onUpdateNote(note?.id as number, { title, content });
+          onUpdateNote(note?.id as number, { title, content }, () => {
+            dispatch &&
+              dispatch({
+                type: ReducerActionsEnum.SET_NOTIFICATION,
+                value: { message: "Note updated", severity: "success" },
+              });
+          });
         },
       }}
     >

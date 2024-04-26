@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment */
+/* eslint-disable */
 import { createContext, Dispatch, ReactNode, useReducer } from "react";
 import { useClerkMutation } from "../useClerkQuery.ts";
 import { Note } from "../components/notes/NoteTypes.ts";
@@ -14,7 +14,11 @@ interface NotesContextType {
   /**
    * Any errors
    */
-  error?: Error | null;
+  error?: any;
+  /**
+   * notification to update user
+   */
+  notification?: { message: string; severity: "error" | "success" | "info" | "warning" };
   /**
    * is editing dialog open
    */
@@ -32,8 +36,6 @@ interface NotesContextType {
    * currently selected tag
    */
   currentTag?: TagValidation;
-  deleteTag?: TagValidation;
-  deleteNoteTag?: TagValidation;
   /**
    * currently selected note's tags
    */
@@ -80,11 +82,13 @@ interface NotesContextType {
    * handle filter by tag
    */
   onTagFilter: (tag: string) => void;
+  onClearNotification: () => void;
 }
 
 const defaultContextValue: NotesContextType = {
   status: "pending",
-  error: null,
+  error: undefined,
+  notification: undefined,
   notes: [],
   tags: [],
   isEditing: false,
@@ -92,6 +96,7 @@ const defaultContextValue: NotesContextType = {
   currentTag: undefined,
   currentTags: [],
   currentSearch: undefined,
+
   onDeleteNote: (_: number) => {
     throw new Error("Function not implemented.");
   },
@@ -116,6 +121,9 @@ const defaultContextValue: NotesContextType = {
   onTagFilter: function (tag: string): void {
     throw new Error("Function not implemented." + tag);
   },
+  onClearNotification: function (): void {
+    throw new Error("Function not implemented.");
+  },
 };
 export const NotesContext = createContext<NotesContextType>(defaultContextValue);
 
@@ -134,6 +142,7 @@ export enum ReducerActionsEnum {
   SET_TAGS,
   SET_STATUS,
   DELETE_TAG,
+  SET_NOTIFICATION,
 }
 
 type NotesReducerStateType = Omit<
@@ -146,6 +155,7 @@ type NotesReducerStateType = Omit<
   | "onTagFilter"
   | "onNotesSearch"
   | "onTagsChange"
+  | "onClearNotification"
 >;
 // type NotesReducerActionValueType = unknown | null;
 type NotesReducerActionType = {
@@ -155,7 +165,8 @@ type NotesReducerActionType = {
 
 const initialState: NotesReducerStateType = {
   status: "pending",
-  error: null,
+  error: undefined,
+  notification: undefined,
   notes: [],
   isEditing: false,
   currentNote: undefined,
@@ -163,8 +174,32 @@ const initialState: NotesReducerStateType = {
   currentSearch: undefined,
   currentTags: [],
 };
+const getErrorMessage = (error: any): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  if (error.issues) {
+    return error.issues[0].message;
+  }
+  return error;
+};
+
 function notesReducer(state: NotesReducerStateType, action: NotesReducerActionType) {
   switch (action.type) {
+    case ReducerActionsEnum.SET_NOTIFICATION:
+      if (!action.value) {
+        return {
+          ...state,
+          notification: undefined,
+        };
+      }
+      return {
+        ...state,
+        notification: action.value,
+      };
     case ReducerActionsEnum.SET_SEARCH:
       return {
         ...state,
@@ -201,15 +236,21 @@ function notesReducer(state: NotesReducerStateType, action: NotesReducerActionTy
         ...state,
         currentNote: undefined,
         error: null,
+        notification: { message: "Note saved successfully", severity: "success" },
       };
     case ReducerActionsEnum.MUTATION_ERROR:
     case ReducerActionsEnum.CREATE_ERROR:
     case ReducerActionsEnum.QUERY_ERROR:
       return {
         ...state,
+        notification: {
+          message: "Something went wrong: " + getErrorMessage(action.value),
+          severity: "error",
+        },
         error: action.value,
       };
     case ReducerActionsEnum.EDIT_START:
+      // eslint-disable-next-line no-case-declarations
       let { tags = [] } = action.value;
       if (tags.length > 0) {
         // @ts-ignore
@@ -262,7 +303,7 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
       dispatch({ type: ReducerActionsEnum.MUTATION_SUCCESS });
     },
     (error) => {
-      dispatch({ type: ReducerActionsEnum.MUTATION_SUCCESS, value: error });
+      dispatch({ type: ReducerActionsEnum.MUTATION_ERROR, value: error });
     },
     ["api/notes"],
   );
@@ -298,6 +339,7 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const handleNoteDelete = (noteId: number, onSuccess?: () => void, onError?: () => void) => {
+    // TODO - 27.04.24 - show confirmation
     mu.mutate(
       {
         url: `api/notes/${noteId}`,
@@ -358,6 +400,10 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     dispatch({ type: ReducerActionsEnum.SET_CURRENT_TAGS, value: tags });
   };
 
+  const handleClearNotification = () => {
+    return dispatch({ type: ReducerActionsEnum.SET_NOTIFICATION });
+  };
+
   return (
     <NotesContext.Provider
       value={{
@@ -370,6 +416,7 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
         onNotesSearch: handleSearch,
         onTagFilter: handleFilterByTag,
         onTagsChange: handleSetTags,
+        onClearNotification: handleClearNotification,
         dispatch,
       }}
     >

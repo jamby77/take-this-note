@@ -27,7 +27,7 @@ const Search = styled("div")(({ theme }) => ({
     marginLeft: theme.spacing(1),
     width: "auto",
   },
-  flexGrow: 1, // for search box
+  flexGrow: 0.5, // for search box
 }));
 const SearchIconWrapper = styled("div")(({ theme }) => ({
   padding: theme.spacing(0, 2),
@@ -71,34 +71,45 @@ export function Header() {
             component="p"
             sx={{
               mr: 2,
-              display: { xs: "none", md: "flex" },
+              display: { xs: "none", md: "block" },
               fontWeight: 700,
               letterSpacing: ".3rem",
               textDecoration: "none",
               flexGrow: 0,
               textTransform: "uppercase",
+              width: "calc(250px - 16px)",
             }}
           >
             <Link to={"/"} style={{ color: "#fff", textDecoration: "none" }}>
               Take This Note
             </Link>
           </Typography>
-          <Search>
-            <SearchIconWrapper>
-              <SearchIcon />
-            </SearchIconWrapper>
-            <StyledInputBase
-              placeholder="Search…"
-              inputProps={{ "aria-label": "search" }}
-              value={currentSearch}
-              onChange={handleSearch}
-            />
-          </Search>
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: { xs: "block", md: "flex" },
+              justifyContent: "center",
+            }}
+          >
+            <Search>
+              <SearchIconWrapper>
+                <SearchIcon />
+              </SearchIconWrapper>
+              <StyledInputBase
+                placeholder="Search…"
+                inputProps={{ "aria-label": "search" }}
+                value={currentSearch}
+                onChange={handleSearch}
+              />
+            </Search>
+          </Box>
           <Box
             sx={{
               flexGrow: 0,
               display: { xs: "none", md: "flex" },
               marginLeft: { xs: 0, md: 10 },
+              width: "calc(250px - 80px)", // width+margin = 250px
+              justifyContent: "flex-end",
             }}
           >
             <SignedIn>

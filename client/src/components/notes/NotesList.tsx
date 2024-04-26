@@ -42,9 +42,9 @@ export function NotesList() {
         </Typography>
       )}
       {status === "success" && notes && Array.isArray(notes) && (
-        <Grid container spacing={2} py={4}>
+        <Grid container spacing={{ xs: 1, md: 2 }} py={4}>
           {notes.map((note: Note) => (
-            <Grid key={note.id} xl={4} md={2} xs={1}>
+            <Grid key={note.id} xl={3} md={4} sm={6} xs={12}>
               <NoteCard note={note} key={note.id} />
             </Grid>
           ))}

@@ -10,7 +10,7 @@ const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 import CssBaseline from "@mui/material/CssBaseline";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { createTheme, ThemeProvider, useMediaQuery } from "@mui/material";
+import { Container, createTheme, ThemeProvider, useMediaQuery } from "@mui/material";
 import { useMemo } from "react";
 import { NotesProvider } from "./providers/NotesProvider.tsx";
 
@@ -39,9 +39,9 @@ function App() {
           <ThemeProvider theme={theme}>
             <CssBaseline enableColorScheme />
             <Header />
-            <main>
+            <Container maxWidth="xl" component="main">
               <Outlet />
-            </main>
+            </Container>
             <ReactQueryDevtools initialIsOpen={false} />
           </ThemeProvider>
         </NotesProvider>

@@ -1,21 +1,9 @@
-import { Box, CircularProgress } from "@mui/material";
+import { Backdrop, CircularProgress } from "@mui/material";
 
 export const LoadingIndicator = () => {
   return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        position: "absolute",
-        width: "100vw",
-        backgroundColor: "transparent",
-        top: 0,
-        left: 0,
-      }}
-    >
+    <Backdrop open sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}>
       <CircularProgress />
-    </Box>
+    </Backdrop>
   );
 };

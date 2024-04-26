@@ -30,7 +30,7 @@ export const NoteTags = () => {
         display: "flex",
         flexWrap: "wrap",
         alignItems: "center",
-        justifyContent: "flex-start",
+        justifyContent: "center",
         gap: 0.5,
         listStyle: "none",
         py: 1,
