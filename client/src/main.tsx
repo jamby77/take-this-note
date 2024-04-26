@@ -7,7 +7,6 @@ import { SignInPage } from "./routes/SignIn.tsx";
 import { SignUpPage } from "./routes/SignUp.tsx";
 import { DashboardLayout } from "./DashboardLayout.tsx";
 import { DashboardPage } from "./routes/Dashboard.tsx";
-import { NotesPage } from "./routes/Notes.tsx";
 
 const router = createBrowserRouter([
   {
@@ -19,10 +18,7 @@ const router = createBrowserRouter([
       {
         element: <DashboardLayout />,
         path: "dashboard",
-        children: [
-          { path: "/dashboard", element: <DashboardPage /> },
-          { path: "/dashboard/notes", element: <NotesPage /> },
-        ],
+        children: [{ path: "/dashboard", element: <DashboardPage /> }],
       },
     ],
   },
