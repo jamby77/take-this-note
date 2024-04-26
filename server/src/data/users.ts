@@ -10,7 +10,12 @@ export const getUsers = async (): Promise<User[]> => {
 export const getUserByEmail = async (email?: string): Promise<UserWithNotes | undefined> => {
   if (!email) return;
 
-  return db.query.users.findFirst({ where: eq(users.email, email), with: { notes: true } });
+  const user = await db.query.users.findFirst({
+    where: eq(users.email, email),
+    with: { notes: true },
+  });
+  console.log(user);
+  return user;
 };
 
 export const getUserById = async (id?: number): Promise<User | undefined> => {
@@ -19,36 +24,31 @@ export const getUserById = async (id?: number): Promise<User | undefined> => {
 };
 
 export const createUser = async (newUser: UserInsert): Promise<User | undefined> => {
-  const returning = await db
-    .insert(users)
-    .values(newUser)
-    .returning({ id: users.id, name: users.name, email: users.email });
-  return returning.pop();
+  const returning = await db.insert(users).values(newUser).returning();
+  return returning[0];
 };
 
 export const updateUser = async (id: number, user: User): Promise<User | undefined> => {
-  const returning = await db
-    .update(users)
-    .set(user)
-    .where(eq(users.id, id))
-    .returning({ id: users.id, name: users.name, email: users.email });
-  return returning.pop();
+  const returning = await db.update(users).set(user).where(eq(users.id, id)).returning();
+  return returning[0];
 };
 export const deleteUser = async (id: number): Promise<{ email: string } | undefined> => {
   const returning = await db
     .delete(users)
     .where(eq(users.id, id))
     .returning({ email: users.email });
-  return returning.pop();
+  return returning[0];
 };
 export const getAuthenticatedUser = async (userId: string) => {
   try {
     const user = await clerkClient.users.getUser(userId);
+    let name = "";
+    if (user.firstName || user.lastName) {
+      name = `${user.firstName} ${user.lastName}`.trim();
+    }
     return {
       id: user.id,
-      username: user.username,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      name,
       email: user.emailAddresses[0].emailAddress,
     };
   } catch (e) {

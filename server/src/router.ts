@@ -4,7 +4,7 @@ import {
   ClerkMiddlewareOptions,
   WithAuthProp,
 } from "@clerk/clerk-sdk-node";
-import { getAuthenticatedUser, getUserByEmail } from "./data/users";
+import { createUser, getAuthenticatedUser, getUserByEmail } from "./data/users";
 import { usersController } from "./users/usersController";
 import { notesController } from "./notes/notesController";
 import { tagsController } from "./notes/tagsController";
@@ -27,6 +27,12 @@ function wrappedAuthMiddleware() {
       const user = await getUserByEmail(authUser?.email);
       if (user) {
         req.user = user;
+      } else if (authUser?.email) {
+        // user is authenticated but not in database, create it
+        req.user = await createUser({
+          email: authUser.email,
+          name: authUser.name,
+        });
       }
     }
     return next();

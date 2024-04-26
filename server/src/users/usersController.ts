@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import { createUser, getAuthenticatedUser, getUserByEmail } from "../data/users";
 import { WithAuthProp } from "@clerk/clerk-sdk-node";
-import { User, UserInsert, UserWithNotes } from "../data/schema";
+import { User, UserWithNotes } from "../data/schema";
 
 /**
  * Get currently authenticated user
@@ -18,19 +18,11 @@ async function getUser(req: WithAuthProp<express.Request>, res: express.Response
     res.json({ error: "Unauthenticated: failed to fetch user" });
     return res.sendStatus(401);
   }
-  const email = user.email;
+  const { email, name } = user;
   let existingUser: UserWithNotes | undefined | User = await getUserByEmail(email);
   // if not in database, create it
   if (!existingUser) {
-    let name = "";
-    if (user.firstName || user.lastName) {
-      name = `${user.firstName} ${user.lastName}`.trim();
-    }
-    const newUser: UserInsert = { email: user.email };
-    if (name.length > 0) {
-      newUser.name = name;
-    }
-    existingUser = await createUser(newUser);
+    existingUser = await createUser({ name, email });
   }
 
   return res.json(existingUser);
