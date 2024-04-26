@@ -109,6 +109,8 @@ export const TakeNote = () => {
                 onChange={changeNoteHandler}
                 value={note}
                 multiline
+                minRows={3}
+                maxRows={10}
                 placeholder="Take Note"
                 inputRef={textRef}
                 sx={{ flexGrow: 1 }}

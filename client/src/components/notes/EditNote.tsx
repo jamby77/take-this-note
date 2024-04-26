@@ -39,7 +39,6 @@ export function EditNote() {
   let isValidationError = false;
   let path = "";
   if (error instanceof Error) {
-    console.error(error);
     if (error instanceof ZodError) {
       isValidationError = true;
       errorMessage = error.issues[0].message;

@@ -246,7 +246,6 @@ function notesReducer(state: NotesReducerStateType, action: NotesReducerActionTy
         tags: action.value,
       };
     case ReducerActionsEnum.DELETE_TAG:
-      console.log({ action });
       return {
         ...state,
         deleteTag: action.value,
@@ -268,7 +267,17 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     ["api/notes"],
   );
 
-  const handleNoteCreate = (newNote: InsertNote, onSuccess?: () => void, onError?: () => void) => {
+  const handleNoteCreate = (
+    newNote: NoteValidation,
+    onSuccess?: () => void,
+    onError?: () => void,
+  ) => {
+    const tags = state.currentTags;
+    if (tags.length > 0) {
+      newNote.tags = tags.map((tag: string | TagValidation) =>
+        typeof tag === "string" ? tag : tag.name,
+      );
+    }
     const validationResult = parseNote(newNote);
     if (!validationResult.success) {
       dispatch({
@@ -305,7 +314,6 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     onError?: () => void,
   ) => {
     const tags = state.currentTags;
-    console.log(tags);
     if (tags.length > 0) {
       newNote.tags = tags.map((tag: string | TagValidation) =>
         typeof tag === "string" ? tag : tag.name,
