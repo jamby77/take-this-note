@@ -11,12 +11,16 @@ import { ReducerActionsEnum } from "../../providers/NotesProvider.tsx";
 import { NoteTags } from "./NoteTags.tsx";
 
 export function NotesList() {
-  const { status, error, notes, dispatch, currentSearch } = useNotes();
-  let url = "api/notes";
+  const { status, error, notes, dispatch, currentSearch, currentTag } = useNotes();
+  const url = "api/notes";
+  const searchParams = new URLSearchParams();
   if (currentSearch) {
-    url += `?q=${currentSearch}`;
+    searchParams.append("q", currentSearch);
   }
-  const result = useClerkQuery<Note[]>(url);
+  if (currentTag) {
+    searchParams.append("tag", currentTag.name);
+  }
+  const result = useClerkQuery<Note[]>(url, searchParams);
   useEffect(() => {
     const { error: queryError, status, data } = result;
     if (queryError) {
@@ -41,6 +45,11 @@ export function NotesList() {
             </Grid>
           ))}
         </Grid>
+      )}
+      {status === "success" && notes?.length === 0 && (
+        <Typography align="center" py={4} variant="h3" color="text.secondary">
+          No notes found
+        </Typography>
       )}
       <EditNote />
     </Box>

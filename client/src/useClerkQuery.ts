@@ -3,9 +3,11 @@ import { useAuth } from "@clerk/clerk-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export function useClerkQuery<Result>(url: string) {
+export function useClerkQuery<Result>(url: string, params?: URLSearchParams) {
   const { getToken, userId } = useAuth();
-
+  if (params && params.size > 0) {
+    url = `${url}?${params.toString()}`;
+  }
   return useQuery<Result>({
     queryKey: [url, userId],
     queryFn: async () => {

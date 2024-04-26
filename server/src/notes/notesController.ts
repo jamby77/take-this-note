@@ -12,11 +12,13 @@ const listNotes = async (req: WithAuthProp<Request>, res: Response) => {
   const { page, limit } = getPagination(req);
   const {
     q,
+    tag,
   }: {
     q?: string;
+    tag?: string;
   } = req.query;
 
-  const notes = await getUserNotes(user.id, page, limit, q);
+  const notes = await getUserNotes(user.id, page, limit, q, tag);
   return res.json(notes);
 };
 

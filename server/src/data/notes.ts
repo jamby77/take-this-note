@@ -8,6 +8,7 @@ export const getUserNotes = async (
   page = 1,
   limit = 10,
   searchText?: string,
+  tag?: string,
 ): Promise<Note[]> => {
   const whereClause = [eq(notes.userId, userId)];
   const query: any = {
@@ -29,7 +30,7 @@ export const getUserNotes = async (
   // merge where clauses
   query.where = and(...whereClause);
   const data = await db.query.notes.findMany(query);
-  return data.map((note) => {
+  const notesWithFlatTags = data.map((note) => {
     // @ts-ignore
     const { notesToTags, ...rest } = note;
     const tags = notesToTags.map((ntt: { tag: Tag }) => ntt.tag.name).filter(Boolean);
@@ -38,6 +39,10 @@ export const getUserNotes = async (
       tags,
     };
   });
+  if (tag) {
+    return notesWithFlatTags.filter((note) => note.tags.includes(tag));
+  }
+  return notesWithFlatTags;
 };
 
 export const getTagNotes = async (tagName: string, userId: number, page: number, limit: number) => {

@@ -1,9 +1,9 @@
+import { useEffect } from "react";
 import { Chip, Paper } from "@mui/material";
+import { useClerkQuery } from "../../useClerkQuery.ts";
 import { useNotes } from "../../providers/UseNotes.tsx";
 import { TagValidation } from "../../shared/validations.ts";
 import { ReducerActionsEnum } from "../../providers/NotesProvider.tsx";
-import { useClerkQuery } from "../../useClerkQuery.ts";
-import { useEffect } from "react";
 
 const boxShadowElevated = {
   boxShadow: 3,
@@ -20,13 +20,6 @@ export const NoteTags = () => {
         dispatch({ type: ReducerActionsEnum.SET_TAGS, value: resultTags.data as TagValidation[] });
     }
   }, [resultTags.status, resultTags.data]);
-  // TODO - 26.04.24 - implement tag filtering
-  useEffect(() => {
-    // if current tag is set, send query to filter by tag
-    if (currentTag) {
-      useClerkQuery("");
-    }
-  }, [currentTag]);
 
   if (!tags || tags.length === 0) return null;
   return (
@@ -46,6 +39,20 @@ export const NoteTags = () => {
       component="ul"
       elevation={0}
     >
+      <li>
+        <Chip
+          onDelete={() => handleTagClick({ name: "All" })}
+          variant="outlined"
+          color="success"
+          label="All"
+          size="medium"
+          disabled={currentTag === undefined}
+          sx={{
+            fontWeight: currentTag?.name === "All" ? "bold" : "normal",
+            "&:hover": { ...boxShadowElevated, fontWeight: "bold", cursor: "pointer" },
+          }}
+        />
+      </li>
       {tags.map((tag) => (
         <li key={tag?.id}>
           <Chip

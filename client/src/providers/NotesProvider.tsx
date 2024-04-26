@@ -178,6 +178,12 @@ function notesReducer(state: NotesReducerStateType, action: NotesReducerActionTy
         currentNote: action.value,
       };
     case ReducerActionsEnum.SET_TAG:
+      if (action.value.name === "All") {
+        return {
+          ...state,
+          currentTag: undefined,
+        };
+      }
       return {
         ...state,
         currentTag: action.value,
