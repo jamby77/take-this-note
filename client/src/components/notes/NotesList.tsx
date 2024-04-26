@@ -30,13 +30,17 @@ export function NotesList() {
       dispatch && dispatch({ type: ReducerActionsEnum.SET_NOTES, value: data });
     }
     dispatch && dispatch({ type: ReducerActionsEnum.SET_STATUS, value: status });
-  }, [result.status, result.data, result.error, dispatch]);
+  }, [result.status, result.data, result.error]);
 
   return (
     <Box>
       <NoteTags />
       {status === "pending" && <LoadingIndicator />}
-      {status === "error" && error && <Typography color="error">Error: {error.message}</Typography>}
+      {status === "error" && error && (
+        <Typography align="center" py={4} variant="h3" color="error">
+          Error: {error.message}
+        </Typography>
+      )}
       {status === "success" && notes && Array.isArray(notes) && (
         <Grid container spacing={2} py={4}>
           {notes.map((note: Note) => (

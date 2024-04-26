@@ -45,13 +45,12 @@ export const NoteTagsEdit = () => {
           return option.name === value1.name;
         }}
         onChange={(_, newValue: OptionType[]) => {
-          setValue(
-            newValue.map((item) => {
-              return { name: item.inputValue ? item.inputValue : item.name };
-            }),
-          );
+          const normalisedTags = newValue.map((item) => {
+            return { name: item.inputValue ? item.inputValue : item.name };
+          });
+          setValue(normalisedTags);
           if (onTagsChange) {
-            onTagsChange(newValue);
+            onTagsChange(normalisedTags);
           }
         }}
       />

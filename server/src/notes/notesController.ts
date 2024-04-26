@@ -50,17 +50,20 @@ const createUserNote = async (req: WithAuthProp<Request>, res: Response) => {
   if (!user) {
     return res.sendStatus(StatusCodes.UNAUTHORIZED);
   }
-  const { title, content } = req.body;
+  const { title, content, tags = [] } = req.body;
   if (!title || !content) {
     res.status(StatusCodes.BAD_REQUEST);
     return res.send("Title and content are required");
   }
   try {
-    const note = await createNote({
-      title,
-      content,
-      userId: user.id,
-    });
+    const note = await createNote(
+      {
+        title,
+        content,
+        userId: user.id,
+      },
+      tags,
+    );
     res.status(StatusCodes.CREATED);
     return res.json(note);
   } catch (e) {
@@ -77,7 +80,7 @@ const updateUserNote = async (req: WithAuthProp<Request>, res: Response) => {
   if (!user) {
     return res.sendStatus(StatusCodes.UNAUTHORIZED);
   }
-  const { title, content } = req.body;
+  const { title, content, tags = [] } = req.body;
   const { id } = req.params;
   if (!id || !title || !content) {
     res.status(StatusCodes.BAD_REQUEST);
@@ -94,13 +97,18 @@ const updateUserNote = async (req: WithAuthProp<Request>, res: Response) => {
   }
 
   try {
-    const note = await updateNote(+id, {
-      title,
-      content,
-      userId: exisingNote.userId,
-    });
+    const note = await updateNote(
+      +id,
+      {
+        title,
+        content,
+        userId: exisingNote.userId,
+      },
+      tags,
+    );
     return res.json(note);
   } catch (e) {
+    console.error(e);
     res.status(StatusCodes.BAD_REQUEST);
     if (e instanceof ZodError) {
       return res.send(e.issues);

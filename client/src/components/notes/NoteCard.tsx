@@ -11,7 +11,7 @@ import DeleteIcon from "@mui/icons-material/DeleteForeverTwoTone";
 import EditNoteIcon from "@mui/icons-material/EditNoteTwoTone";
 
 import { Note } from "./NoteTypes.ts";
-import { NodeCardTags } from "./NodeCardTags.tsx";
+import { NoteCardTags } from "./NoteCardTags.tsx";
 import { NoteTimestamps } from "./NoteTimestamps.tsx";
 
 import { useNotes } from "../../providers/UseNotes.tsx";
@@ -29,7 +29,7 @@ export const NoteCard = ({ note }: { note: Note }) => {
       onClick={() => onStartEditNote(note)}
     >
       <Stack direction="column" spacing={0.5} sx={{ height: "100%" }}>
-        <CardHeader title={note.title} subheader={<NodeCardTags note={note} />} />
+        <CardHeader title={note.title} subheader={<NoteCardTags note={note} />} />
         <CardContent
           sx={{
             overflow: "hidden",

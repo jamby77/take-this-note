@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const noteSchema = z.object({
   id: z.number().gte(1).optional(),
-  title: z.string().trim().min(3).max(100),
-  content: z.string().trim().min(3).max(500),
+  title: z.string().trim().min(3).max(100, "Title is too long"),
+  content: z.string().trim().min(3).max(500, "Content is too long"),
   userId: z.number().gte(1).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional().nullable(),

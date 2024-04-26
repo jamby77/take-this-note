@@ -2,7 +2,7 @@
 import { createContext, Dispatch, ReactNode, useReducer } from "react";
 import { useClerkMutation } from "../useClerkQuery.ts";
 import { Note } from "../components/notes/NoteTypes.ts";
-import { parseNote, TagValidation } from "../shared/validations.ts";
+import { NoteValidation, parseNote, TagValidation } from "../shared/validations.ts";
 
 type InsertNote = Pick<Note, "title" | "content">;
 
@@ -32,6 +32,8 @@ interface NotesContextType {
    * currently selected tag
    */
   currentTag?: TagValidation;
+  deleteTag?: TagValidation;
+  deleteNoteTag?: TagValidation;
   /**
    * currently selected note's tags
    */
@@ -131,6 +133,7 @@ export enum ReducerActionsEnum {
   SET_NOTES,
   SET_TAGS,
   SET_STATUS,
+  DELETE_TAG,
 }
 
 type NotesReducerStateType = Omit<
@@ -226,6 +229,7 @@ function notesReducer(state: NotesReducerStateType, action: NotesReducerActionTy
     case ReducerActionsEnum.EDIT_STOP:
       return {
         ...state,
+        error: null,
         currentNote: undefined,
         isEditing: false,
       };
@@ -238,6 +242,12 @@ function notesReducer(state: NotesReducerStateType, action: NotesReducerActionTy
       return {
         ...state,
         tags: action.value,
+      };
+    case ReducerActionsEnum.DELETE_TAG:
+      console.log({ action });
+      return {
+        ...state,
+        deleteTag: action.value,
       };
   }
   return state;
@@ -253,6 +263,7 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     (error) => {
       dispatch({ type: ReducerActionsEnum.MUTATION_SUCCESS, value: error });
     },
+    ["api"],
   );
 
   const handleNoteCreate = (newNote: InsertNote, onSuccess?: () => void, onError?: () => void) => {
@@ -287,14 +298,21 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
 
   const handleNoteUpdate = (
     noteId: number,
-    newNote: InsertNote,
+    newNote: NoteValidation,
     onSuccess?: () => void,
     onError?: () => void,
   ) => {
+    const tags = state.currentTags;
+    console.log(tags);
+    if (tags.length > 0) {
+      newNote.tags = tags.map((tag: string | TagValidation) =>
+        typeof tag === "string" ? tag : tag.name,
+      );
+    }
     const validationResult = parseNote(newNote);
     if (!validationResult.success) {
       dispatch({
-        type: ReducerActionsEnum.CREATE_ERROR,
+        type: ReducerActionsEnum.MUTATION_ERROR,
         value: validationResult.error,
       });
       onError && onError();
@@ -306,7 +324,7 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
         method: "PUT",
         data: validationResult.data,
       },
-      { onError, onSuccess },
+      { onError, onSuccess, onSettled: () => dispatch({ type: ReducerActionsEnum.EDIT_STOP }) },
     );
   };
 

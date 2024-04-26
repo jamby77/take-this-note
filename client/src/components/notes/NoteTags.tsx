@@ -19,7 +19,7 @@ export const NoteTags = () => {
       dispatch &&
         dispatch({ type: ReducerActionsEnum.SET_TAGS, value: resultTags.data as TagValidation[] });
     }
-  }, [resultTags.status, resultTags.data]);
+  }, [resultTags.status, resultTags.data, dispatch]);
 
   if (!tags || tags.length === 0) return null;
   return (

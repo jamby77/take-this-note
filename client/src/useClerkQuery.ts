@@ -62,6 +62,7 @@ export function useClerkMutation(
       // Invalidate and re-fetch
       queryClient.invalidateQueries({
         queryKey: [...(refreshKeys || []), userId],
+        refetchType: "all",
       });
       onSuccess && onSuccess(data, variables);
     },

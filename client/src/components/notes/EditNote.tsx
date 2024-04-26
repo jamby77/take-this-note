@@ -7,10 +7,11 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { TransitionProps } from "@mui/material/transitions";
-import { Slide } from "@mui/material";
+import { Slide, Typography } from "@mui/material";
 
 import { useNotes } from "../../providers/UseNotes.tsx";
 import { NoteTagsEdit } from "./NoteTagsEdit.tsx";
+import { ZodError } from "zod";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -23,7 +24,7 @@ const Transition = React.forwardRef(function Transition(
 });
 
 export function EditNote() {
-  const { currentNote: note, isEditing: open, onStopEditNote, onUpdateNote } = useNotes();
+  const { currentNote: note, isEditing: open, onStopEditNote, onUpdateNote, error } = useNotes();
 
   const [isOpen, setIsOpen] = useState(false);
   useEffect(() => {
@@ -34,6 +35,21 @@ export function EditNote() {
     setIsOpen(false);
     onStopEditNote();
   };
+  let errorMessage = "";
+  let isValidationError = false;
+  let path = "";
+  if (error instanceof Error) {
+    console.error(error);
+    if (error instanceof ZodError) {
+      isValidationError = true;
+      errorMessage = error.issues[0].message;
+      path = error.issues[0].path[0].toString();
+    } else {
+      errorMessage = error.message;
+    }
+  } else if (typeof error === "string") {
+    errorMessage = error;
+  }
   return (
     <Dialog
       open={isOpen}
@@ -52,7 +68,12 @@ export function EditNote() {
         },
       }}
     >
-      <DialogTitle>Edit</DialogTitle>
+      <DialogTitle title={"test"}>
+        <Typography>Edit</Typography>
+        {errorMessage.trim().length > 0 && !isValidationError && (
+          <Typography color="error">{errorMessage}</Typography>
+        )}
+      </DialogTitle>
       <DialogContent>
         <TextField
           autoFocus
@@ -66,6 +87,7 @@ export function EditNote() {
           variant="outlined"
           defaultValue={note?.title}
           inputProps={{ maxLength: 20 }}
+          error={path === "title" && isValidationError}
         />
         <TextField
           inputProps={{ maxLength: 500 }}
@@ -80,6 +102,8 @@ export function EditNote() {
           fullWidth
           variant="outlined"
           defaultValue={note?.content}
+          error={path === "content" && isValidationError}
+          helperText={path === "content" && isValidationError && errorMessage}
         />
         <NoteTagsEdit />
       </DialogContent>

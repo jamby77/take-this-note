@@ -1,9 +1,10 @@
 import { Chip, Paper, Typography } from "@mui/material";
 import { Note } from "./NoteTypes.ts";
+
 const boxShadowElevated = {
   boxShadow: 3,
 };
-export const NodeCardTags = ({ note }: { note: Note }) => {
+export const NoteCardTags = ({ note }: { note: Note }) => {
   if (!note.tags || note.tags.length === 0) return null;
   return (
     <Paper
@@ -16,7 +17,6 @@ export const NodeCardTags = ({ note }: { note: Note }) => {
         listStyle: "none",
         p: 0.5,
         m: 0,
-        "&:hover": boxShadowElevated,
       }}
       component="ul"
       elevation={0}

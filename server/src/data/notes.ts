@@ -1,6 +1,6 @@
 import { db } from "./db";
-import { and, desc, eq, ilike, sql } from "drizzle-orm";
-import { Note, NoteInsert, notes, Tag, tags } from "./schema";
+import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm";
+import { Note, NoteInsert, notes, noteTags, Tag, tags } from "./schema";
 import { parseNote, parseTag } from "../shared/validations";
 
 export const getUserNotes = async (
@@ -72,7 +72,7 @@ export const getNoteById = async (id: number) => {
   return db.query.notes.findFirst({ where: eq(notes.id, id) });
 };
 
-export const createNote = async (newNote: NoteInsert) => {
+export const createNote = async (newNote: NoteInsert, tags: string[]) => {
   const validationResult = parseNote(newNote);
   if (!validationResult.success) {
     throw validationResult.error;
@@ -83,25 +83,47 @@ export const createNote = async (newNote: NoteInsert) => {
     .insert(notes)
     .values(newNote)
     .returning({ id: notes.id, title: notes.title, content: notes.content });
-  return returning.pop();
+  const note = returning[0];
+  await addNoteTags(note.id, tags);
+  return note;
 };
 
-export const updateNote = async (id: number, note: NoteInsert) => {
-  const validationResult = parseNote(note);
+export const updateNote = async (id: number, updateNote: NoteInsert, tags: string[]) => {
+  const validationResult = parseNote(updateNote);
   if (!validationResult.success) {
     throw validationResult.error;
   }
-  note.title = validationResult.data.title;
-  note.content = validationResult.data.content;
+  updateNote.title = validationResult.data.title;
+  updateNote.content = validationResult.data.content;
   const returning = await db
     .update(notes)
     .set({
-      ...note,
+      ...updateNote,
       updatedAt: sql`now()`,
     })
     .where(eq(notes.id, id))
     .returning({ id: notes.id, title: notes.title, content: notes.content });
-  return returning.pop();
+  const note = returning[0];
+  await addNoteTags(note.id, tags);
+  return note;
+};
+
+const addNoteTags = async (noteId: number, tagNames: string[]) => {
+  if (!tagNames.length) {
+    return;
+  }
+  const tags = await getTagsByNames(tagNames);
+  if (tags.length !== tagNames.length) {
+    const missingTags = tagNames.filter((name) => !tags.find((tag) => tag.name === name));
+    for (const tag of missingTags) {
+      const tagObj = await createTag(tag);
+      tags.push(tagObj);
+    }
+  }
+  await db
+    .insert(noteTags)
+    .values(tags.map((tag) => ({ noteId, tagId: tag.id })))
+    .onConflictDoNothing();
 };
 
 export const deleteNote = async (id: number) => {
@@ -119,6 +141,10 @@ export const getTags = async (page = 1, limit = 10) => {
   });
 };
 
+const getTagsByNames = async (names: string[]) => {
+  return db.query.tags.findMany({ where: inArray(tags.name, names) });
+};
+
 export const getTagByName = async (name: string) => {
   return db.query.tags.findFirst({ where: eq(tags.name, name) });
 };
@@ -128,11 +154,8 @@ export const createTag = async (name: string) => {
   if (!validationResult.success) {
     throw validationResult.error;
   }
-  const returning = await db
-    .insert(tags)
-    .values({ name: validationResult.data.name })
-    .returning({ name: tags.name });
-  return returning.pop();
+  const returning = await db.insert(tags).values({ name: validationResult.data.name }).returning();
+  return returning[0];
 };
 
 export const updateTag = async (name: string, newName: string) => {
