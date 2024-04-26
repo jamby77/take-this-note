@@ -9,7 +9,7 @@ const boxShadowElevated = {
   boxShadow: 3,
 };
 export const NoteTags = () => {
-  const { tags, currentTag, dispatch } = useNotes();
+  const { tags, notes, currentTag, dispatch } = useNotes();
   const handleTagClick = (tag: TagValidation) => {
     dispatch && dispatch({ type: ReducerActionsEnum.SET_TAG, value: tag });
   };
@@ -21,7 +21,9 @@ export const NoteTags = () => {
     }
   }, [resultTags.status, resultTags.data, dispatch]);
 
-  if (!tags || tags.length === 0) return null;
+  if (!tags || tags.length === 0 || !notes || notes.length === 0) {
+    return null;
+  }
   return (
     <Paper
       sx={{
