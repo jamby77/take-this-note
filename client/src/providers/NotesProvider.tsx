@@ -263,7 +263,7 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     (error) => {
       dispatch({ type: ReducerActionsEnum.MUTATION_SUCCESS, value: error });
     },
-    ["api"],
+    ["api/notes"],
   );
 
   const handleNoteCreate = (newNote: InsertNote, onSuccess?: () => void, onError?: () => void) => {

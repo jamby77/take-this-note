@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, sql } from "drizzle-orm";
 import { Note, NoteInsert, notes, noteTags, Tag, tags } from "./schema";
 import { parseNote, parseTag } from "../shared/validations";
 
@@ -84,7 +84,7 @@ export const createNote = async (newNote: NoteInsert, tags: string[]) => {
     .values(newNote)
     .returning({ id: notes.id, title: notes.title, content: notes.content });
   const note = returning[0];
-  await addNoteTags(note.id, tags);
+  await addRemoveNoteTags(note.id, tags);
   return note;
 };
 
@@ -104,26 +104,49 @@ export const updateNote = async (id: number, updateNote: NoteInsert, tags: strin
     .where(eq(notes.id, id))
     .returning({ id: notes.id, title: notes.title, content: notes.content });
   const note = returning[0];
-  await addNoteTags(note.id, tags);
+  await addRemoveNoteTags(note.id, tags);
   return note;
 };
 
-const addNoteTags = async (noteId: number, tagNames: string[]) => {
+async function getNoteTags(noteId: number) {
+  // current note tags
+  return db
+    .select({
+      id: tags.id,
+      name: tags.name,
+    })
+    .from(tags)
+    .leftJoin(noteTags, eq(noteTags.tagId, tags.id))
+    .leftJoin(notes, eq(notes.id, noteTags.noteId))
+    .where(eq(noteTags.noteId, noteId));
+}
+
+const addRemoveNoteTags = async (noteId: number, tagNames: string[]) => {
   if (!tagNames.length) {
     return;
   }
-  const tags = await getTagsByNames(tagNames);
-  if (tags.length !== tagNames.length) {
-    const missingTags = tagNames.filter((name) => !tags.find((tag) => tag.name === name));
-    for (const tag of missingTags) {
+  let currentNoteTags = await getNoteTags(noteId);
+  const newTags = tagNames.filter((name) => !currentNoteTags.find((tag) => tag.name === name));
+  const deletedTags = currentNoteTags.filter((tag) => !tagNames.find((name) => name === tag.name));
+  console.log({ noteId, currentNoteTags, tagNames, newTags, deletedTags });
+  if (newTags.length) {
+    for (const tag of newTags) {
       const tagObj = await createTag(tag);
-      tags.push(tagObj);
+      currentNoteTags.push(tagObj);
+    }
+    // add tags to note
+    await db
+      .insert(noteTags)
+      .values(currentNoteTags.map((tag) => ({ noteId, tagId: tag.id })))
+      .onConflictDoNothing();
+  }
+  if (deletedTags.length) {
+    for (const tag of deletedTags) {
+      // await deleteTag(tag.name);
+      currentNoteTags = currentNoteTags.filter((t) => t.name !== tag.name);
+      await db.delete(noteTags).where(and(eq(noteTags.noteId, noteId), eq(noteTags.tagId, tag.id)));
     }
   }
-  await db
-    .insert(noteTags)
-    .values(tags.map((tag) => ({ noteId, tagId: tag.id })))
-    .onConflictDoNothing();
 };
 
 export const deleteNote = async (id: number) => {
@@ -141,10 +164,6 @@ export const getTags = async (page = 1, limit = 10) => {
   });
 };
 
-const getTagsByNames = async (names: string[]) => {
-  return db.query.tags.findMany({ where: inArray(tags.name, names) });
-};
-
 export const getTagByName = async (name: string) => {
   return db.query.tags.findFirst({ where: eq(tags.name, name) });
 };
@@ -154,7 +173,11 @@ export const createTag = async (name: string) => {
   if (!validationResult.success) {
     throw validationResult.error;
   }
-  const returning = await db.insert(tags).values({ name: validationResult.data.name }).returning();
+  const returning = await db
+    .insert(tags)
+    .values({ name: validationResult.data.name })
+    .onConflictDoNothing()
+    .returning();
   return returning[0];
 };
 
