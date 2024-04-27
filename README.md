@@ -25,3 +25,12 @@ To ensure proper db flow, you need to follow these steps:
 7. run ```npm install``` - to install all node dependencies
 8. run ```npm run build``` - to build the client
 9. run ```npm run preview``` - to start the client
+
+## Roadmap
+- save notes as `.md` files, probably on GitHub or s3
+- in db save only urls to actual content
+- add rich text support
+- add images support (github if possible, or s3 )
+- register as github app - https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app
+- on edit show differences
+- allow for "reason" message (commit message)
