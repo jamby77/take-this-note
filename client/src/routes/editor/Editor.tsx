@@ -10,11 +10,11 @@ import { CodeNode } from "@lexical/code";
 import { ListItemNode, ListNode } from "@lexical/list";
 import { LinkNode } from "@lexical/link";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
+import { TRANSFORMERS } from "@lexical/markdown";
 import ToolbarPlugin from "./plugins/ToolbarPlugin.tsx";
 import TreeViewPlugin from "./plugins/TreeViewPlugin.tsx";
 import "./editor.css";
 import { MarkdownActions } from "./actions/MarkdownActions.tsx";
-import { $convertToMarkdownString, TRANSFORMERS } from "@lexical/markdown";
 import theme from "./EditorTheme.ts";
 
 // Catch any errors that occur during Lexical updates and log them
@@ -49,8 +49,7 @@ export function Editor() {
           <HistoryPlugin />
           <OnChangePlugin
             onChange={(...args) => {
-              const markdown = $convertToMarkdownString(TRANSFORMERS);
-              console.log({ args, markdown });
+              console.log({ args });
             }}
           />
           <AutoFocusPlugin />

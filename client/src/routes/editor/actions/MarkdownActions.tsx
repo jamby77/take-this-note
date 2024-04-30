@@ -1,5 +1,6 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $convertToMarkdownString, TRANSFORMERS } from "@lexical/markdown";
+import { $getTextContent } from "lexical";
 
 export const MarkdownActions = () => {
   const [editor] = useLexicalComposerContext();
@@ -9,6 +10,8 @@ export const MarkdownActions = () => {
       // Node -> Markdown
       const markdown = $convertToMarkdownString(TRANSFORMERS);
       console.log({ markdown });
+      const textContent = $getTextContent();
+      console.log({ textContent });
     });
   };
 
